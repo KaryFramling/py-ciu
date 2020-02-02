@@ -10,11 +10,12 @@ if sys.version_info < (3, 5):
 
 install_requires = [
     'numpy',
-    'pandas'
+    'pandas',
+    'sklearn'
 ]
 
 extra_require = {
-    'tests': ['pytest']
+    'tests': ['pytest', 'sklearn']
 }
 
 setup(
