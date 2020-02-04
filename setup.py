@@ -9,13 +9,14 @@ if sys.version_info < (3, 5):
     print('py-ciu requires at least Python 3.5 to run reliably.')
 
 install_requires = [
+    'matplotlib',
     'numpy',
     'pandas',
     'sklearn'
 ]
 
 extra_require = {
-    'tests': ['pytest', 'sklearn']
+    'ciu_tests': ['pytest', 'sklearn']
 }
 
 setup(
@@ -33,7 +34,7 @@ setup(
         "Issue tracker": "https://github.com/TimKam/py-ciu/issues",
     },
     platforms='any',
-    packages=find_packages(exclude=['tests']),
+    packages=find_packages(exclude=['ciu_tests']),
     python_requires=">=3.5",
     classifiers=[
         "Development Status :: 4 - Beta",

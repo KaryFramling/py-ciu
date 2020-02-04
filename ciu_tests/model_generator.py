@@ -4,12 +4,13 @@ from ciu import determine_ciu
 from data_generator import generate_data
 
 
-def generate_model():
+def generate_model(train_data):
     """
+    :param train_data: dataframe to train on
     Generates example model to test CIU
     :return: example model
     """
-    labelled_data = generate_data()['train'][1]
+    labelled_data = train_data
     random_forest = RandomForestClassifier(
         n_estimators=1000,
         random_state=42
@@ -21,10 +22,12 @@ def generate_model():
     return random_forest
 
 
-test_data = generate_data()['test'][0].drop(['approved'], axis=1)
-test_data_encoded = generate_data()['test'][1].drop(['approved'], axis=1)
+data = generate_data()
+train_data = data['train'][1]
+test_data = data
+test_data_encoded = data['test'][1].drop(['approved'], axis=1)
 
-model = generate_model()
+model = generate_model(train_data)
 
 print(model.predict_proba([test_data_encoded.values[0]]))
 
@@ -39,23 +42,35 @@ category_mapping = {
 ciu = determine_ciu(
     test_data_encoded.values[0],
     model,
-    test_data_encoded[:1000],
+    [
+        [20, 70, True], [-20000, 150000, True], [0, 20000, True],
+        [0, 1, True], [0, 1, True], [0, 1, True],
+        [0, 1, True], [0, 1, True], [0, 1, True]
+    ],
     ['age', 'assets', 'monthly_income', 'gender_female', 'gender_male',
         'gender_other', 'job_type_fixed', 'job_type_none', 'job_type_permanent'],
+    1000,
     prediction_index,
     category_mapping
 )
-print(ciu)
+print(ciu.ci, ciu.cu)
+
+ciu.plot_ci()
+
+print(ciu.text_explain())
 
 """
 TODOs:
-* Category mapping support
-* Visualization support
-* Text explanation support
+* Improve performance
+* CIU for feature interactions
 * Clustering example
 * Tests
 * Documentation
 * Brush up examples
 * Publish
+--------
+* Third example
+* Contrastive explanations
+* Text explanation support
 """
 
