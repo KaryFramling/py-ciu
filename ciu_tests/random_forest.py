@@ -1,7 +1,7 @@
 from sklearn.ensemble import RandomForestClassifier
 from ciu import determine_ciu
 
-from data_generator import generate_data
+from loan_data_generator import generate_data
 
 
 def generate_model(train_data):
@@ -29,8 +29,6 @@ test_data_encoded = data['test'][1].drop(['approved'], axis=1)
 
 model = generate_model(train_data)
 
-print(model.predict_proba([test_data_encoded.values[0]]))
-
 example_prediction = model.predict_proba([test_data_encoded.values[0]])
 prediction_index = 0 if example_prediction[0][0] > 0.5 else 1
 
@@ -40,22 +38,32 @@ category_mapping = {
 }
 
 ciu = determine_ciu(
-    test_data_encoded.values[0],
-    model,
-    [
-        [20, 70, True], [-20000, 150000, True], [0, 20000, True],
-        [0, 1, True], [0, 1, True], [0, 1, True],
-        [0, 1, True], [0, 1, True], [0, 1, True]
-    ],
-    ['age', 'assets', 'monthly_income', 'gender_female', 'gender_male',
-        'gender_other', 'job_type_fixed', 'job_type_none', 'job_type_permanent'],
+    test_data_encoded.iloc[0, :].to_dict(),
+    model.predict_proba,
+    {
+        'age': [20, 70, True],
+        'assets': [-20000, 150000, True],
+        'monthly_income': [0, 20000, True],
+        'gender_female': [0, 1, True],
+        'gender_male': [0, 1, True],
+        'gender_other': [0, 1, True],
+        'job_type_fixed': [0, 1, True],
+        'job_type_none': [0, 1, True],
+        'job_type_permanent': [0, 1, True]
+    },
     1000,
     prediction_index,
     category_mapping
 )
+
+print(data['test'][0].values[0])
+print(test_data_encoded.values[0])
+print(model.predict_proba([test_data_encoded.values[0]]))
+
 print(ciu.ci, ciu.cu)
 
 ciu.plot_ci()
+ciu.plot_cu()
 
 print(ciu.text_explain())
 

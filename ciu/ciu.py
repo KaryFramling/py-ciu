@@ -4,42 +4,42 @@ import pandas as pd
 from ciu.ciu_object import CiuObject
 
 
-def _generate_samples(case, feature_names, min_maxs, samples, feature_i, index_i, category_mapping):
-    feature_samples = pd.DataFrame(columns=feature_names)
+def _generate_samples(case, feature_names, min_maxs, samples, index_i, category_mapping, categories_encoded):
+    rows = []
     for sample in range(samples):
         sample_entry = {}
         for index_j, feature_j in enumerate(feature_names):
             if not (index_j == index_i):
-                sample_entry[feature_j] = case[index_j]
-                # check if feature_i, feature_i in same category;
-                # if so, set all but feature_i to negation of feature_i
-                for categories in category_mapping.values():
-                    same_category = feature_j in categories \
-                                    and feature_i in categories
-                    if same_category and case[index_j] == 1:
-                        feature_samples[feature_i] = 0
+                sample_entry[feature_j] = case[feature_j]
             else:
-                min_val = min_maxs[index_j][0]
-                max_val = min_maxs[index_j][1]
-                is_int = min_maxs[index_j][2]
+                min_val = min_maxs[feature_j][0]
+                max_val = min_maxs[feature_j][1]
+                is_int = min_maxs[feature_j][2]
                 sample_entry[feature_j] = \
                     random.randint(min_val, max_val) if is_int \
                         else random.random(min_val, max_val)
-        feature_samples = \
-            feature_samples.append(sample_entry, ignore_index=True)
-    return feature_samples
+                # check if feature_j, feature_k in same category;
+                # if so, set feature_k to 0 if feature_j is 1
+                for index_k, feature_k in enumerate(feature_names):
+                    if not (index_j == index_k):
+                        for categories in category_mapping.values():
+                            same_category = feature_j in categories \
+                                            and feature_k in categories
+                            if same_category and sample_entry[feature_j] == 1:
+                                sample_entry[feature_k] = 0
+        rows.append(sample_entry)
+    return pd.DataFrame(rows)
 
 
 def determine_ciu(
-        case, model, min_maxs, feature_names,
+        case, predictor, min_maxs,
         samples=1000, prediction_index=None, category_mapping=None):
     """
     Determines contextual importance and utility for a given case.
 
     :param case: Case data
-    :param model: Black-box model that predicts the case outcome
-    :param min_maxs: list of (min, max, is_int) tuples for each feature
-    :param feature_names: list of feature names
+    :param predictor: The prediction function of the black-box model Py-CIU should call
+    :param min_maxs: dictionary (``'feature_name': [min, max, is_int]`` for each feature)
     :param samples: number of samples to be generated. Defaults to 1000.
     :param prediction_index: If the model returns several predictions, provide
                              the index of the relevant prediction. Defaults to
@@ -58,7 +58,7 @@ def determine_ciu(
     category_names = list(category_mapping.keys())
     feature_names_decoded = []
     categories_encoded = []
-    for feature in feature_names:
+    for feature in min_maxs.keys():
         is_category = False
         for index, categories in enumerate(category_mapping.values()):
             if feature in categories:
@@ -73,17 +73,17 @@ def determine_ciu(
     cus = {}
 
     case_prediction = \
-        model.predict_proba([case])[0] if prediction_index is None \
-        else model.predict_proba([case])[0][prediction_index]
+        predictor([list(case.values())])[0] if prediction_index is None \
+        else predictor([list(case.values())])[0][prediction_index]
 
     predictions = {}
 
-    for index_i, feature_i in enumerate(feature_names):
-        feature_samples = _generate_samples(case, feature_names, min_maxs, samples, feature_i, index_i, category_mapping)
+    for index_i, feature_i in enumerate(min_maxs.keys()):
+        feature_samples = _generate_samples(case, min_maxs.keys(), min_maxs, samples, index_i, category_mapping, categories_encoded)
         predictions[feature_i] = \
-            model.predict_proba(feature_samples) if prediction_index is None \
+            predictor(feature_samples) if prediction_index is None \
             else [prob[prediction_index] for \
-                  prob in model.predict_proba(feature_samples)]
+                  prob in predictor(feature_samples)]
 
     abs_max = None
     abs_min = None
@@ -92,8 +92,8 @@ def determine_ciu(
         # Get right predictions for decoded category
         if feature in category_mapping.keys():
             encoded_feature = None
-            for index_j, encoded_feature_j in enumerate(feature_names):
-                if case[index_j] == 1:
+            for encoded_feature_j in min_maxs.keys():
+                if case[encoded_feature_j] == 1:
                     encoded_feature = encoded_feature_j
             feature_max = max(predictions[encoded_feature])
             if abs_max is None or abs_max < feature_max:
@@ -111,26 +111,28 @@ def determine_ciu(
             if abs_min is None or abs_min > feature_min:
                 abs_min = feature_min
 
-    print(f'abs_max: {abs_max}, abs_min: {abs_min}')
     for index, feature in enumerate(feature_names_decoded):
         # Get right predictions for decoded category
         if feature in category_mapping.keys():
             encoded_feature = None
-            for index_j, encoded_feature_j in enumerate(feature_names):
-                if case[index_j] == 1:
+            for encoded_feature_j in min_maxs.keys():
+                if case[encoded_feature_j] == 1 and encoded_feature_j in category_mapping[feature]:
                     encoded_feature = encoded_feature_j
             c_min = min(predictions[encoded_feature])
             c_max = max(predictions[encoded_feature])
         else:
             c_min = min(predictions[feature])
             c_max = max(predictions[feature])
-        print(case)
-        print(f'c_max: {c_max}, c_min: {c_min}')
         n = case_prediction
-        print(f'n: {n}')
+        print(feature)
+        print('c max', c_max)
+        print('c min', c_min)
+        print('n', n)
         ci = (c_max - c_min) / (abs_max - abs_min)
-        cu = (n - c_min) / (c_max - c_min)
-        print(f'ci: {ci}, cu: {cu}')
+        if (c_max - c_min) == 0:
+            cu = (n - c_min) / 0.0001
+        else:
+            cu = (n - c_min) / (c_max - c_min)
         cis[feature] = ci
         cus[feature] = cu
 

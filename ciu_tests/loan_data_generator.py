@@ -11,7 +11,7 @@ def classify_case(case):
     :return: True, if loan should be approved, else False
     """
 
-    if case['gender'] is 'women' and random.random(0,1) > 0.5:
+    if case['gender'] != 'male' and random.random() > 0.5:
         return False
     if case['monthly_income'] > 5000 and case['assets'] > 10000:
         return True
@@ -21,7 +21,7 @@ def classify_case(case):
 
 def generate_data(labelled=True):
     """
-    Generates synthetic test/example data
+    Generates synthetic test/example data: loan application data
     :return: Pandas Dataframe
     """
     data = {
@@ -61,5 +61,3 @@ def generate_data(labelled=True):
             data_df[-1000:], data_df_encoded[-1000:]
         ]
     }
-
-print(generate_data())
