@@ -38,3 +38,4 @@ def generate_data():
             data_df[-100:], data_df_encoded[-100:]
         ]
     }
+

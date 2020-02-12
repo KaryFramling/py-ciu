@@ -68,17 +68,20 @@ ciu.plot_cu()
 print(ciu.text_explain())
 
 """
-TODOs:
-* Improve performance
-* CIU for feature interactions
-* Clustering example
-* Tests
-* Documentation
-* Brush up examples
-* Publish
---------
-* Third example
-* Contrastive explanations
-* Text explanation support
+TODO:
+* normalize
+* examples
+* feature interaction
+* test
+* brush up
+* Contrastive:
+    * Take a case
+    * Compute CIU
+    * Always for one feature or for one set of features
+    * Simulate an example with a different prediction category (rejection)
+    * Compare cases: we highlight the features that are
+    * Highlight required feature difference
+    * Use sum of CI_case_1, CI_case_2 to highlight importance
+    * Use sum of CU_case_1, CU_case_2 to highlight utility
 """
 
