@@ -4,7 +4,8 @@ import pandas as pd
 from ciu.ciu_object import CiuObject
 
 
-def _generate_samples(case, feature_names, min_maxs, samples, index_i, category_mapping, categories_encoded):
+def _generate_samples(case, feature_names, min_maxs, samples, index_i,
+                      category_mapping):
     rows = []
     for sample in range(samples):
         sample_entry = {}
@@ -32,8 +33,8 @@ def _generate_samples(case, feature_names, min_maxs, samples, index_i, category_
 
 
 def determine_ciu(
-        case, predictor, min_maxs,
-        samples=1000, prediction_index=None, category_mapping=None):
+        case, predictor, min_maxs, samples=1000,
+        prediction_index=None, category_mapping=None, feature_interactions=[]):
     """
     Determines contextual importance and utility for a given case.
 
@@ -47,6 +48,8 @@ def determine_ciu(
     :param category_mapping: Mapping of one-hot encoded categorical variables to
                              list of categories and category name. Defaults to
                              ``None``.
+    :param feature_interactions: List of lists of features whose interactions
+                                 should be evaluated. Defaults to ``[]``.
 
     :return: dictionary: for each feature: list with
              contextual importance value, contextual utility value
