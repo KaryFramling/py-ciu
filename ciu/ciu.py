@@ -124,10 +124,6 @@ def determine_ciu(
             c_min = min(predictions[feature])
             c_max = max(predictions[feature])
         n = case_prediction
-        print(feature)
-        print('c max', c_max)
-        print('c min', c_min)
-        print('n', n)
         ci = (c_max - c_min) / (abs_max - abs_min)
         if (c_max - c_min) == 0:
             cu = (n - c_min) / 0.0001

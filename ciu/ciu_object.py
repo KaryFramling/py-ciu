@@ -29,8 +29,9 @@ class CiuObject:
         else:
             return 'very typical'
 
-    def plot(self, data):
+    def plot(self, data, title):
         fig, ax = plt.subplots()
+        fig.suptitle(title)
         feature_names = self.ci.keys()
         bar = ax.bar(feature_names, data)
 
@@ -53,12 +54,10 @@ class CiuObject:
         plt.show()
 
     def plot_ci(self):
-        plt.title('Contextual Importance')
-        self.plot(self.ci.values())
+        self.plot(self.ci.values(), 'Contextual Importance')
 
     def plot_cu(self):
-        plt.title('Contextual Utility')
-        self.plot(self.cu.values())
+        self.plot(self.cu.values(), 'Contextual Utility')
 
     def text_explain(self):
         feature_names = self.ci.keys()
