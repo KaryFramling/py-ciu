@@ -93,7 +93,7 @@ def determine_ciu(
         if feature in category_mapping.keys():
             encoded_feature = None
             for encoded_feature_j in min_maxs.keys():
-                if case[encoded_feature_j] == 1:
+                if case[encoded_feature_j] == 1 and encoded_feature_j in category_mapping[feature]:
                     encoded_feature = encoded_feature_j
             feature_max = max(predictions[encoded_feature])
             if abs_max is None or abs_max < feature_max:
