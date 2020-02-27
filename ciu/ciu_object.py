@@ -3,9 +3,10 @@ import numpy as np
 
 
 class CiuObject:
-    def __init__(self, ci, cu):
+    def __init__(self, ci, cu, interactions):
         self.ci = ci
         self.cu = cu
+        self.interactions = interactions
 
     @staticmethod
     def _determine_importance(ci):
@@ -63,7 +64,7 @@ class CiuObject:
         feature_names = self.ci.keys()
 
         explanation_texts = []
-        for index, feature in enumerate(feature_names):
+        for index, feature in enumerate(list(feature_names) + self.interactions):
             importance = self._determine_importance(self.ci[feature])
             typicality = self._determine_typicality(self.cu[feature])
             ci = round(self.ci[feature] * 100, 2)

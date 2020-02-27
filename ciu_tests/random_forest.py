@@ -37,6 +37,8 @@ category_mapping = {
     'job_type': ['job_type_fixed', 'job_type_none', 'job_type_permanent']
 }
 
+feature_interactions = [['assets', 'monthly_income']]
+
 ciu = determine_ciu(
     test_data_encoded.iloc[0, :].to_dict(),
     model.predict_proba,
@@ -53,7 +55,8 @@ ciu = determine_ciu(
     },
     1000,
     prediction_index,
-    category_mapping
+    category_mapping,
+    feature_interactions
 )
 
 print(data['test'][0].values[0])

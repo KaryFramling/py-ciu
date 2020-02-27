@@ -4,30 +4,32 @@ import pandas as pd
 from ciu.ciu_object import CiuObject
 
 
-def _generate_samples(case, feature_names, min_maxs, samples, index_i,
+def _generate_samples(case, feature_names, min_maxs, samples, indices,
                       category_mapping):
     rows = []
     for sample in range(samples):
         sample_entry = {}
-        for index_j, feature_j in enumerate(feature_names):
-            if not (index_j == index_i):
-                sample_entry[feature_j] = case[feature_j]
-            else:
-                min_val = min_maxs[feature_j][0]
-                max_val = min_maxs[feature_j][1]
-                is_int = min_maxs[feature_j][2]
-                sample_entry[feature_j] = \
-                    random.randint(min_val, max_val) if is_int \
-                        else random.random(min_val, max_val)
-                # check if feature_j, feature_k in same category;
-                # if so, set feature_k to 0 if feature_j is 1
-                for index_k, feature_k in enumerate(feature_names):
-                    if not (index_j == index_k):
-                        for categories in category_mapping.values():
-                            same_category = feature_j in categories \
-                                            and feature_k in categories
-                            if same_category and sample_entry[feature_j] == 1:
-                                sample_entry[feature_k] = 0
+        for index_i in indices:
+            for index_j, feature_j in enumerate(feature_names):
+                if not (index_j == index_i):
+                    if not (index_j in indices):
+                        sample_entry[feature_j] = case[feature_j]
+                else:
+                    min_val = min_maxs[feature_j][0]
+                    max_val = min_maxs[feature_j][1]
+                    is_int = min_maxs[feature_j][2]
+                    sample_entry[feature_j] = \
+                        random.randint(min_val, max_val) if is_int \
+                            else random.uniform(min_val, max_val)
+                    # check if feature_j, feature_k in same category;
+                    # if so, set feature_k to 0 if feature_j is 1
+                    for index_k, feature_k in enumerate(feature_names):
+                        if not (index_j == index_k):
+                            for categories in category_mapping.values():
+                                same_category = feature_j in categories \
+                                                and feature_k in categories
+                                if same_category and sample_entry[feature_j] == 1:
+                                    sample_entry[feature_k] = 0
         rows.append(sample_entry)
     return pd.DataFrame(rows)
 
@@ -82,15 +84,28 @@ def determine_ciu(
     predictions = {}
 
     for index_i, feature_i in enumerate(min_maxs.keys()):
-        feature_samples = _generate_samples(case, min_maxs.keys(), min_maxs, samples, index_i, category_mapping, categories_encoded)
+        feature_samples = _generate_samples(
+            case, min_maxs.keys(), min_maxs, samples, [index_i], category_mapping
+        )
         predictions[feature_i] = \
             predictor(feature_samples) if prediction_index is None \
             else [prob[prediction_index] for \
                   prob in predictor(feature_samples)]
 
+    for features in feature_interactions:
+        indices = [list(min_maxs.keys()).index(feature) for feature in features]
+        feature_samples = _generate_samples(
+            case, min_maxs.keys(), min_maxs, samples, indices, category_mapping
+        )
+        interaction_name = "_".join(features)
+        predictions[interaction_name] = \
+            predictor(feature_samples) if prediction_index is None \
+                else [prob[prediction_index] for \
+                      prob in predictor(feature_samples)]
     abs_max = None
     abs_min = None
 
+    # determine absolute min/max, only considering single features
     for index, feature in enumerate(feature_names_decoded):
         # Get right predictions for decoded category
         if feature in category_mapping.keys():
@@ -114,6 +129,18 @@ def determine_ciu(
             if abs_min is None or abs_min > feature_min:
                 abs_min = feature_min
 
+    # determine absolute min/max, also considering feature interactions
+    for features in feature_interactions:
+        interaction_name = "_".join(features)
+        interaction_max = max(predictions[interaction_name])
+        if abs_max is None or abs_max < interaction_max:
+            abs_max = interaction_max
+
+        interaction_min = min(predictions[interaction_name])
+        if abs_min is None or abs_min > interaction_min:
+            abs_min = interaction_min
+
+    # compute CI/CU for single features
     for index, feature in enumerate(feature_names_decoded):
         # Get right predictions for decoded category
         if feature in category_mapping.keys():
@@ -135,6 +162,22 @@ def determine_ciu(
         cis[feature] = ci
         cus[feature] = cu
 
-    ciu = CiuObject(cis, cus)
+    # compute CI/CU for feature interactions
+    interaction_names = [
+        "_".join(features) for features in feature_interactions
+    ]
+    for interaction_name in interaction_names:
+        c_min = min(predictions[interaction_name])
+        c_max = max(predictions[interaction_name])
+        n = case_prediction
+        ci = (c_max - c_min) / (abs_max - abs_min)
+        if (c_max - c_min) == 0:
+            cu = (n - c_min) / 0.0001
+        else:
+            cu = (n - c_min) / (c_max - c_min)
+        cis[interaction_name] = ci
+        cus[interaction_name] = cu
+
+    ciu = CiuObject(cis, cus, interaction_names)
 
     return ciu
