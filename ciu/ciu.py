@@ -9,27 +9,26 @@ def _generate_samples(case, feature_names, min_maxs, samples, indices,
     rows = []
     for sample in range(samples):
         sample_entry = {}
-        for index_i in indices:
-            for index_j, feature_j in enumerate(feature_names):
-                if not (index_j == index_i):
-                    if not (index_j in indices):
-                        sample_entry[feature_j] = case[feature_j]
-                else:
-                    min_val = min_maxs[feature_j][0]
-                    max_val = min_maxs[feature_j][1]
-                    is_int = min_maxs[feature_j][2]
-                    sample_entry[feature_j] = \
-                        random.randint(min_val, max_val) if is_int \
-                            else random.uniform(min_val, max_val)
-                    # check if feature_j, feature_k in same category;
-                    # if so, set feature_k to 0 if feature_j is 1
-                    for index_k, feature_k in enumerate(feature_names):
-                        if not (index_j == index_k):
-                            for categories in category_mapping.values():
-                                same_category = feature_j in categories \
-                                                and feature_k in categories
-                                if same_category and sample_entry[feature_j] == 1:
-                                    sample_entry[feature_k] = 0
+        for index_j, feature_j in enumerate(feature_names):
+            if not (index_j in indices):
+                # if not (index_j in indices):
+                sample_entry[feature_j] = case[feature_j]
+            else:
+                min_val = min_maxs[feature_j][0]
+                max_val = min_maxs[feature_j][1]
+                is_int = min_maxs[feature_j][2]
+                sample_entry[feature_j] = \
+                    random.randint(min_val, max_val) if is_int \
+                        else random.uniform(min_val, max_val)
+                # check if feature_j, feature_k in same category;
+                # if so, set feature_k to 0 if feature_j is 1
+                for index_k, feature_k in enumerate(feature_names):
+                    if not (index_j == index_k):
+                        for categories in category_mapping.values():
+                            same_category = feature_j in categories \
+                                            and feature_k in categories
+                            if same_category and sample_entry[feature_j] == 1:
+                                sample_entry[feature_k] = 0
         rows.append(sample_entry)
     return pd.DataFrame(rows)
 
@@ -40,7 +39,7 @@ def determine_ciu(
     """
     Determines contextual importance and utility for a given case.
 
-    :param case: Case data
+    :param case: Case data (dictionary)
     :param predictor: The prediction function of the black-box model Py-CIU should call
     :param min_maxs: dictionary (``'feature_name': [min, max, is_int]`` for each feature)
     :param samples: number of samples to be generated. Defaults to 1000.
@@ -50,8 +49,9 @@ def determine_ciu(
     :param category_mapping: Mapping of one-hot encoded categorical variables to
                              list of categories and category name. Defaults to
                              ``None``.
-    :param feature_interactions: List of lists of features whose interactions
-                                 should be evaluated. Defaults to ``[]``.
+    :param feature_interactions: List of {key: list} tuples of features whose
+                                 interactions should be evaluated. Defaults to
+                                 ``[]``.
 
     :return: dictionary: for each feature: list with
              contextual importance value, contextual utility value
@@ -92,12 +92,13 @@ def determine_ciu(
             else [prob[prediction_index] for \
                   prob in predictor(feature_samples)]
 
-    for features in feature_interactions:
+    for feature_interaction in feature_interactions:
+        interaction_name = list(feature_interaction.keys())[0]
+        features = list(feature_interaction.values())[0]
         indices = [list(min_maxs.keys()).index(feature) for feature in features]
         feature_samples = _generate_samples(
             case, min_maxs.keys(), min_maxs, samples, indices, category_mapping
         )
-        interaction_name = "_".join(features)
         predictions[interaction_name] = \
             predictor(feature_samples) if prediction_index is None \
                 else [prob[prediction_index] for \
@@ -130,8 +131,8 @@ def determine_ciu(
                 abs_min = feature_min
 
     # determine absolute min/max, also considering feature interactions
-    for features in feature_interactions:
-        interaction_name = "_".join(features)
+    for feature_interaction in feature_interactions:
+        interaction_name = list(feature_interaction.keys())[0]
         interaction_max = max(predictions[interaction_name])
         if abs_max is None or abs_max < interaction_max:
             abs_max = interaction_max
@@ -156,9 +157,10 @@ def determine_ciu(
         n = case_prediction
         ci = (c_max - c_min) / (abs_max - abs_min)
         if (c_max - c_min) == 0:
-            cu = (n - c_min) / 0.0001
+            cu = (n - c_min) / 0.01
         else:
             cu = (n - c_min) / (c_max - c_min)
+        if cu == 0: cu = 0.001
         cis[feature] = ci
         cus[feature] = cu
 
@@ -172,9 +174,10 @@ def determine_ciu(
         n = case_prediction
         ci = (c_max - c_min) / (abs_max - abs_min)
         if (c_max - c_min) == 0:
-            cu = (n - c_min) / 0.0001
+            cu = (n - c_min) / 0.01
         else:
             cu = (n - c_min) / (c_max - c_min)
+        if cu == 0: cu = 0.001
         cis[interaction_name] = ci
         cus[interaction_name] = cu
 

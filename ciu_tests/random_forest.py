@@ -37,7 +37,7 @@ category_mapping = {
     'job_type': ['job_type_fixed', 'job_type_none', 'job_type_permanent']
 }
 
-feature_interactions = [['assets', 'monthly_income']]
+feature_interactions = [{'assets_income': ['assets', 'monthly_income']}]
 
 ciu = determine_ciu(
     test_data_encoded.iloc[0, :].to_dict(),
@@ -69,22 +69,4 @@ ciu.plot_ci()
 ciu.plot_cu()
 
 print(ciu.text_explain())
-
-"""
-TODO:
-* normalize
-* examples
-* feature interaction
-* test
-* brush up
-* Contrastive:
-    * Take a case
-    * Compute CIU
-    * Always for one feature or for one set of features
-    * Simulate an example with a different prediction category (rejection)
-    * Compare cases: we highlight the features that are
-    * Highlight required feature difference
-    * Use sum of CI_case_1, CI_case_2 to highlight importance
-    * Use sum of CU_case_1, CU_case_2 to highlight utility
-"""
 
