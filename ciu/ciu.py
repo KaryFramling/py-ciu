@@ -7,6 +7,7 @@ from ciu.ciu_object import CiuObject
 def _generate_samples(case, feature_names, min_maxs, samples, indices,
                       category_mapping):
     rows = []
+    rows.append(case)
     for sample in range(samples):
         sample_entry = {}
         for index_j, feature_j in enumerate(feature_names):
@@ -85,7 +86,8 @@ def determine_ciu(
 
     for index_i, feature_i in enumerate(min_maxs.keys()):
         feature_samples = _generate_samples(
-            case, min_maxs.keys(), min_maxs, samples, [index_i], category_mapping
+            case, min_maxs.keys(), min_maxs, samples, [index_i],
+            category_mapping
         )
         predictions[feature_i] = \
             predictor(feature_samples) if prediction_index is None \
@@ -112,15 +114,12 @@ def determine_ciu(
         if feature in category_mapping.keys():
             encoded_feature = None
             for encoded_feature_j in min_maxs.keys():
-                if case[encoded_feature_j] == 1 and encoded_feature_j in category_mapping[feature]:
-                    encoded_feature = encoded_feature_j
-            feature_max = max(predictions[encoded_feature])
-            if abs_max is None or abs_max < feature_max:
-                abs_max = feature_max
-
-            feature_min = min(predictions[encoded_feature])
-            if abs_min is None or abs_min > feature_min:
-                abs_min = feature_min
+                feature_max = max(predictions[encoded_feature_j])
+                if abs_max is None or abs_max < feature_max:
+                    abs_max = feature_max
+                feature_min = min(predictions[encoded_feature_j])
+                if abs_min is None or abs_min > feature_min:
+                    abs_min = feature_min
         else:
             feature_max = max(predictions[feature])
             if abs_max is None or abs_max < feature_max:
