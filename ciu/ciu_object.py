@@ -64,7 +64,7 @@ class CiuObject:
         feature_names = self.ci.keys()
 
         explanation_texts = []
-        for index, feature in enumerate(list(feature_names) + self.interactions):
+        for index, feature in enumerate(list(feature_names)):
             importance = self._determine_importance(self.ci[feature])
             typicality = self._determine_typicality(self.cu[feature])
             ci = round(self.ci[feature] * 100, 2)
