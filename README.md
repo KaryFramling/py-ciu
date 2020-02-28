@@ -1,3 +1,5 @@
+[![CircleCI](https://circleci.com/gh/TimKam/py-ciu.svg?style=svg)](https://github.com/TimKam/py-ciu)
+
 # py-ciu
 
 *Explainable Machine Learning through Contextual Importance and Utility*
