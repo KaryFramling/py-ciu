@@ -30,6 +30,15 @@ def _generate_samples(case, feature_names, min_maxs, samples, indices,
                                             and feature_k in categories
                             if same_category and sample_entry[feature_j] == 1:
                                 sample_entry[feature_k] = 0
+        # set categorical values that would otherwise not have a category
+        # assigned
+        for categories in category_mapping.values():
+            is_activated = False
+            for category in categories:
+                if sample_entry[category] == 1: is_activated = True
+            if not is_activated:
+                category = categories[random.randint(0, len(categories) -1)]
+                sample_entry[category] = 1
         rows.append(sample_entry)
     return pd.DataFrame(rows)
 

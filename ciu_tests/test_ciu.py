@@ -1,5 +1,6 @@
 from ciu import determine_ciu
 from ciu.ciu_object import CiuObject
+from ciu.ciu import _generate_samples
 from random_forest import generate_model
 from loan_data_generator import generate_data
 
@@ -18,11 +19,7 @@ category_mapping = {
 }
 
 feature_interactions = [{'assets_income': ['assets', 'monthly_income']}]
-
-ciu = determine_ciu(
-    test_data_encoded.iloc[0, :].to_dict(),
-    model.predict_proba,
-    {
+min_maxs = {
         'age': [20, 70, True],
         'assets': [-20000, 150000, True],
         'monthly_income': [0, 20000, True],
@@ -32,7 +29,13 @@ ciu = determine_ciu(
         'job_type_fixed': [0, 1, True],
         'job_type_none': [0, 1, True],
         'job_type_permanent': [0, 1, True]
-    },
+    }
+
+case = test_data_encoded.iloc[0, :].to_dict()
+ciu = determine_ciu(
+    case,
+    model.predict_proba,
+    min_maxs,
     1000,
     prediction_index,
     category_mapping,
@@ -72,3 +75,17 @@ def test_text_ciu():
                                f'{importance} (CI={ci_r}%), is {typicality} ' \
                                f'for its class (CU={cu_r}%).'
 
+
+def test_sample_generator_categories():
+    """The sample data generator should generate data for one-hot encoded
+    categories correctly: per case and per category, exactly one feature should
+    be set to 1, the others should be zero."""
+    samples = _generate_samples(case, min_maxs.keys(),
+                                min_maxs, 1000, [0], category_mapping)
+
+    for _, sample_case in samples.iterrows():
+        for categories in category_mapping.values():
+            active_categories = 0
+            for category in categories:
+                if sample_case[category] == 1: active_categories +=1
+            assert active_categories == 1
