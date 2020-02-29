@@ -21,14 +21,14 @@ extra_require = {
 
 setup(
     name='py-ciu',
-    version='0.0.1',
+    version='0.0.2',
     url='https://github.com/TimKam/py-ciu/',
     license='BSD',
     author='Timotheus Kampik & Sule Anjomshoae',
     author_email='tkampik@cs.umu.se, sulea@cs.umu.se',
     description='Python documentation generator',
     long_description=long_desc,
-    long_description_content_type='text/x-md',
+    long_description_content_type='text/markdown',
     project_urls={
         "Code": "https://github.com/TimKam/py-ciu/",
         "Issue tracker": "https://github.com/TimKam/py-ciu/issues",
