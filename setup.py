@@ -21,7 +21,7 @@ extra_require = {
 
 setup(
     name='py-ciu',
-    version='0.0.2',
+    version='0.0.3',
     url='https://github.com/TimKam/py-ciu/',
     license='BSD',
     author='Timotheus Kampik & Sule Anjomshoae',
