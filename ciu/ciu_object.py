@@ -3,10 +3,11 @@ import numpy as np
 
 
 class CiuObject:
-    def __init__(self, ci, cu, interactions):
+    def __init__(self, ci, cu, interactions, theme='Blues_r'):
         self.ci = ci
         self.cu = cu
         self.interactions = interactions
+        self.theme = 'Blues_r'
 
     @staticmethod
     def _determine_importance(ci):
@@ -42,8 +43,15 @@ class CiuObject:
             bar.set_facecolor("none")
             x, y = bar.get_xy()
             width, height = bar.get_width(), bar.get_height()
-            grad = np.atleast_2d(np.linspace(256 ** height, 1, 256 ** height)).T
-            ax.imshow(grad, extent=[x, x + width, y, y + height], aspect="auto")
+            gradient = np.linspace(100, 150, 100)
+            combined_gradient = np.vstack((gradient, gradient))
+            transposed_gradient = combined_gradient.T
+            ax.imshow(
+                transposed_gradient,
+                extent=[x, x + width, y, y + height],
+                cmap=plt.get_cmap(self.theme),
+                aspect="auto"
+            )
         ax.axis(lim)
 
         axes = plt.gca()
