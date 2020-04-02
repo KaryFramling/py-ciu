@@ -1,6 +1,6 @@
 import random
 import pandas as pd
-
+import numpy as np
 from ciu.ciu_object import CiuObject
 
 
@@ -37,7 +37,7 @@ def _generate_samples(case, feature_names, min_maxs, samples, indices,
             for category in categories:
                 if sample_entry[category] == 1: is_activated = True
             if not is_activated:
-                category = categories[random.randint(0, len(categories) -1)]
+                category = categories[random.randint(0, len(categories) - 1)]
                 sample_entry[category] = 1
         rows.append(sample_entry)
     return pd.DataFrame(rows)
@@ -45,10 +45,11 @@ def _generate_samples(case, feature_names, min_maxs, samples, indices,
 
 def determine_ciu(
         case, predictor, min_maxs, samples=1000,
-        prediction_index=None, category_mapping=None, feature_interactions=[]):
+        prediction_index=None, prediction_index2=None, category_mapping=None, feature_interactions=[]):
     """
     Determines contextual importance and utility for a given case.
 
+    :param prediction_index2: for contrastive cases
     :param case: Case data (dictionary)
     :param predictor: The prediction function of the black-box model Py-CIU should call
     :param min_maxs: dictionary (``'feature_name': [min, max, is_int]`` for each feature)
@@ -86,12 +87,19 @@ def determine_ciu(
 
     cis = {}
     cus = {}
+    cis_cont = {}
+    cus_cont = {}
 
     case_prediction = \
         predictor([list(case.values())])[0] if prediction_index is None \
-        else predictor([list(case.values())])[0][prediction_index]
+            else predictor([list(case.values())])[0][prediction_index]
+
+    contrastive_pre = \
+        predictor([list(case.values())])[0] if prediction_index2 is None \
+            else predictor([list(case.values())])[0][prediction_index2]
 
     predictions = {}
+    contrastive_predictions = {}
 
     for index_i, feature_i in enumerate(min_maxs.keys()):
         feature_samples = _generate_samples(
@@ -100,8 +108,13 @@ def determine_ciu(
         )
         predictions[feature_i] = \
             predictor(feature_samples) if prediction_index is None \
-            else [prob[prediction_index] for \
-                  prob in predictor(feature_samples)]
+                else [prob[prediction_index] for \
+                      prob in predictor(feature_samples)]
+
+        contrastive_predictions[feature_i] = \
+            predictor(feature_samples) if prediction_index2 is None \
+                else [prob[prediction_index2] for \
+                      prob in predictor(feature_samples)]
 
     for feature_interaction in feature_interactions:
         interaction_name = list(feature_interaction.keys())[0]
@@ -116,6 +129,8 @@ def determine_ciu(
                       prob in predictor(feature_samples)]
     abs_max = None
     abs_min = None
+    abs_max_contrastive = None
+    abs_min_contrastive = None
 
     # determine absolute min/max, only considering single features
     for index, feature in enumerate(feature_names_decoded):
@@ -129,6 +144,18 @@ def determine_ciu(
                 feature_min = min(predictions[encoded_feature_j])
                 if abs_min is None or abs_min > feature_min:
                     abs_min = feature_min
+
+                cont_pre = pd.DataFrame(contrastive_predictions[encoded_feature_j])
+                feature_max_contrastive = cont_pre.max()
+                feature_max_contrastive = feature_max_contrastive.to_numpy()
+                if abs_max_contrastive is None or all(abs_max_contrastive < feature_max_contrastive):
+                    abs_max_contrastive = feature_max_contrastive
+
+                feature_min_contrastive = cont_pre.min()
+                feature_min_contrastive = feature_min_contrastive.to_numpy()
+                if abs_min_contrastive is None or all(abs_min_contrastive > feature_min_contrastive):
+                    abs_min_contrastive = feature_min_contrastive
+
         else:
             feature_max = max(predictions[feature])
             if abs_max is None or abs_max < feature_max:
@@ -137,6 +164,17 @@ def determine_ciu(
             feature_min = min(predictions[feature])
             if abs_min is None or abs_min > feature_min:
                 abs_min = feature_min
+
+            cont_pre = pd.DataFrame(contrastive_predictions[feature])
+            feature_max_contrastive = cont_pre.max()
+            feature_max_contrastive = feature_max_contrastive.to_numpy()
+            if abs_max_contrastive is None or all(abs_max_contrastive < feature_max_contrastive):
+                abs_max_contrastive = feature_max_contrastive
+
+            feature_min_contrastive = cont_pre.min()
+            feature_min_contrastive = feature_min_contrastive.to_numpy()
+            if abs_min_contrastive is None or all(abs_min_contrastive > feature_min_contrastive):
+                abs_min_contrastive = feature_min_contrastive
 
     # determine absolute min/max, also considering feature interactions
     for feature_interaction in feature_interactions:
@@ -171,6 +209,46 @@ def determine_ciu(
         if cu == 0: cu = 0.001
         cis[feature] = ci
         cus[feature] = cu
+        #print('ci/cu')
+        #print(ci)
+        #print(cu)
+
+        # compute CI/CU for contrastive cases
+    for index, feature in enumerate(feature_names_decoded):
+        # Get right predictions for decoded category
+
+        if feature in category_mapping.keys():
+            encoded_feature = None
+
+            for encoded_feature_j in min_maxs.keys():
+                if case[encoded_feature_j] == 1 and encoded_feature_j in category_mapping[feature]:
+                    encoded_feature = encoded_feature_j
+
+            cont_pre2 = pd.DataFrame(contrastive_predictions[encoded_feature])
+            c_min_cont = cont_pre2.min()
+            c_min_cont = c_min_cont.to_numpy()
+            c_max_cont = cont_pre2.max()
+            c_max_cont = c_max_cont.to_numpy()
+        else:
+            cont_pre3 = pd.DataFrame(contrastive_predictions[feature])
+            c_min_cont = cont_pre3.min()
+            c_min_cont = c_min_cont.to_numpy()
+            c_max_cont = cont_pre3.max()
+            c_max_cont = c_max_cont.to_numpy()
+        n_cont = contrastive_pre
+        ci_cont = (c_max_cont - c_min_cont) / (abs_max_contrastive - abs_min_contrastive)
+        if any((c_max_cont - c_min_cont) == 0):
+            cu_cont = (n_cont - c_min_cont) / 0.01
+            cu_cont = cu_cont.to_numpy()
+        else:
+            cu_cont = (n_cont - c_min_cont) / (c_max_cont - c_min_cont)
+
+        if any(cu_cont == 0): cu_cont = 0.001
+        cis_cont[feature] = ci_cont
+        cus_cont[feature] = cu_cont
+        print('ci/cu cont')
+        print(ci_cont)
+        print(cu_cont)
 
     # compute CI/CU for feature interactions
     interaction_names = [
@@ -189,6 +267,6 @@ def determine_ciu(
         cis[interaction_name] = ci
         cus[interaction_name] = cu
 
-    ciu = CiuObject(cis, cus, interaction_names)
+    ciu = CiuObject(cis, cus, cis_cont, cus_cont, interaction_names)
 
     return ciu

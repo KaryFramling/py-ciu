@@ -3,9 +3,11 @@ import numpy as np
 
 
 class CiuObject:
-    def __init__(self, ci, cu, interactions, theme='Blues_r'):
+    def __init__(self, ci, cu, ci_cont, cu_cont, interactions, theme='Blues_r'):
         self.ci = ci
         self.cu = cu
+        self.ci_cont = ci_cont
+        self.cu_cont = cu_cont
         self.interactions = interactions
         self.theme = 'Blues_r'
 
@@ -27,6 +29,28 @@ class CiuObject:
         if cu < 0.5:
             return 'unlikely'
         if cu < 0.75:
+            return 'typical'
+        else:
+            return 'very typical'
+
+    @staticmethod
+    def _determine_importance_cont(ci_cont):
+        if any(ci_cont < 0.25):
+            return 'not important'
+        if any(ci_cont < 0.5):
+            return 'important'
+        if any(ci_cont < 0.75):
+            return 'very important'
+        else:
+            return 'highly important'
+
+    @staticmethod
+    def _determine_typicality_cont(cu_cont):
+        if any(cu_cont < 0.25):
+            return 'not typical'
+        if any(cu_cont < 0.5):
+            return 'unlikely'
+        if any(cu_cont < 0.75):
             return 'typical'
         else:
             return 'very typical'
@@ -83,3 +107,22 @@ class CiuObject:
             explanation_texts.append(explanation_text)
 
         return explanation_texts
+
+    def contrastive_text_explain(self):
+        feature_names = self.ci_cont.keys()
+
+        contrastive_explanation_texts = []
+        for index, feature in enumerate(list(feature_names)):
+            importance = self._determine_importance_cont(self.ci_cont[feature])
+            typicality = self._determine_typicality_cont(self.cu_cont[feature])
+
+            ci_cont = np.round(self.ci_cont[feature], 2)
+            cu_cont = np.round(self.cu_cont[feature], 2)
+
+            for i in range(len(ci_cont)):
+                contrastive_explanation_text = f'The feature "{feature}", which is ' \
+                               f'{importance} (CI={ci_cont[i]}%), is {typicality} ' \
+                               f'for its class (CU={cu_cont[i]}%).'
+                contrastive_explanation_texts.append(contrastive_explanation_text)
+
+        return contrastive_explanation_texts
