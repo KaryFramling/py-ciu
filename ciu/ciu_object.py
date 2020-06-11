@@ -3,11 +3,11 @@ import numpy as np
 
 
 class CiuObject:
-    def __init__(self, ci, cu, interactions, theme='Blues_r'):
+    def __init__(self, ci, cu, interactions, theme='fivethirtyeight'):
         self.ci = ci
         self.cu = cu
         self.interactions = interactions
-        self.theme = 'Blues_r'
+        self.theme = theme
 
     @staticmethod
     def _determine_importance(ci):
@@ -32,41 +32,35 @@ class CiuObject:
             return 'very typical'
 
     def plot(self, data, title):
-        fig, ax = plt.subplots()
+        plt.style.use(self.theme)
+        data = data.astype(int)
+        fig, ax = plt.subplots(figsize=(3, 3))
         fig.suptitle(title)
         feature_names = self.ci.keys()
-        bar = ax.bar(feature_names, data)
-
-        ax = bar[0].axes
-        lim = ax.get_xlim() + ax.get_ylim()
-        for bar in bar:
-            bar.set_facecolor("none")
-            x, y = bar.get_xy()
-            width, height = bar.get_width(), bar.get_height()
-            gradient = np.linspace(100, 150, 100)
-            combined_gradient = np.vstack((gradient, gradient))
-            transposed_gradient = combined_gradient.T
-            ax.imshow(
-                transposed_gradient,
-                extent=[x, x + width, y, y + height],
-                cmap=plt.get_cmap(self.theme),
-                aspect="auto"
-            )
-        ax.axis(lim)
-
-        axes = plt.gca()
-        axes.set_ylim([0, 1])
-        axes.spines['top'].set_visible(False)
-        axes.spines['right'].set_visible(False)
-        axes.spines['bottom'].set_visible(False)
-        axes.spines['left'].set_visible(False)
-        plt.show()
+        y_pos = np.arange(len(feature_names))
+        ax.barh(y_pos, data)
+        ax.set_yticks(y_pos)
+        ax.set_yticklabels(feature_names)
+        ax.set_xticks([])
+        for index, y in enumerate(data):
+            ax.text(15, index - 0.1, y, fontsize='large', size=10, ha='right',
+                    va='bottom')
+            ax.text(21, index - 0.1, '%', fontsize='large', size=10, ha='right',
+                    va='bottom')
+        ax.spines['top'].set_visible(False)
+        ax.spines['right'].set_visible(False)
+        ax.spines['bottom'].set_visible(False)
+        ax.spines['left'].set_visible(True)
 
     def plot_ci(self):
-        self.plot(self.ci.values(), 'Contextual Importance')
+        ci = np.fromiter(self.ci.values(), dtype=float)
+        ci = np.round(ci * 100)
+        self.plot(ci, 'Contextual Importance')
 
     def plot_cu(self):
-        self.plot(self.cu.values(), 'Contextual Utility')
+        cu = np.fromiter(self.cu.values(), dtype=float)
+        cu = np.round(cu * 100)
+        self.plot(cu, 'Contextual Utility')
 
     def text_explain(self):
         feature_names = self.ci.keys()
