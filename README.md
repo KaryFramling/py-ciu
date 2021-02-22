@@ -159,5 +159,16 @@ learn more.
 
 * [Sule Anjomshoae](https://github.com/shulemsi)
 
+Cite as:
+
+```
+@inproceedings{anjomshoae2020py,
+  title={Py-CIU: A Python Library for Explaining Machine Learning Predictions Using Contextual Importance and Utility},
+  author={Anjomshoae, Sule and Kampik, Timotheus and Fr{\"a}mling, Kary},
+  booktitle={IJCAI-PRICAI 2020 Workshop on Explainable Artificial Intelligence (XAI)},
+  year={2020}
+}
+```
+
 ## License
 The library is released under the [BSD Clause-2 License](./LICENSE).
