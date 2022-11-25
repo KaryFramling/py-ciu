@@ -1,10 +1,10 @@
-# CIU-Py
+# py-ciu
 
 *Explainable Machine Learning through Contextual Importance and Utility*
 
 **NOTE: This python implementation is currently a work in progress. As such some of the functionality present in the original R version is not quite yet available.**
 
-The *CIU-Python* library provides methods to generate post-hoc explanations for
+The *py-ciu* library provides methods to generate post-hoc explanations for
 machine learning-based classifiers.
 
 # What is CIU?
@@ -68,7 +68,7 @@ negative.
 First, install the required dependencies. NOTE: this is to be run in your environment's terminal; some environments such as Google Colab might require an exclamation mark before the command, such as `!pip install`. 
 
 ```
-pip install CIU_Py
+pip install py-ciu
 ```
 
 Import the library:
