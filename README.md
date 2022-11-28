@@ -188,4 +188,5 @@ boston_ciu.plot_ciu(plot_mode="combined", color_blind='tritanopia', sort='cu')
 
 * [Kary Främling](https://github.com/KaryFramling)
 
-This implementation replaces an older one, available at [https://github.com/TimKam/py-ciu](https://github.com/TimKam/py-ciu)
+The current version of py-ciu re-uses research code provided by [Timotheus Kampik](https://github.com/TimKam/) and replaces it. The old code is available in the branch "Historical".
+
