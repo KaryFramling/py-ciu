@@ -13,7 +13,7 @@ class CiuObject:
         self.interactions = interactions
         self.theme = theme
 
-    def explain_tabular(self):
+    def explain(self):
         out_df = pd.DataFrame.from_dict([self.ci,
                                          self.cu,
                                          self.c_mins,
@@ -36,69 +36,6 @@ class CiuObject:
             if not exclude_feature:
                 feature_names_final.append(feature_name)
         return feature_names_final
-    
-    def explain_text(self, include='all', thresholds_ci=None, thresholds_cu=None):
-        """
-        :param str include: define which features and interactions to use, defaults to 'all'
-        :param dict thresholds_ci: dictionary containing the label and ceiling value for the CI thresholds
-        :param dict thresholds_cu: dictionary containing the label and ceiling value for the CU thresholds
-        :return:
-        """
-
-        if thresholds_ci is None:
-            thresholds_ci = {
-                'very low importance': 0.20,
-                'low importance': 0.40,
-                'normal importance': 0.60,
-                'high importance': 0.80,
-                'very high importance': 1
-            }
-
-        if thresholds_cu is None:
-            thresholds_cu = {
-                'not typical': 0.25,
-                'somewhat typical': 0.5,
-                'typical': 0.75,
-                'very typical': 1
-            }
-
-        if len(thresholds_cu) < 2 or len(thresholds_ci) < 2:
-            raise ValueError(f"The dictionaries containing the CI/CU thresholds must have at least 2 elements. \
-                             \nCI dict: {thresholds_ci} \nCU dict: {thresholds_cu}")
-
-        feature_names = self._filter_feature_names(
-            self.ci.keys(),
-            self.interactions, include
-        )
-
-        explanation_texts = []
-
-        for feature in list(feature_names):
-            try:
-                for k, v in thresholds_ci.items():
-                    if self.ci[feature] <= v:
-                        ci_text = k
-                        break
-
-                for k, v in thresholds_cu.items():
-                    if self.cu[feature] <= v:
-                        cu_text = k
-                        break
-            except TypeError:
-                raise TypeError(f"The dictionaries containing the CI/CU thresholds cannot have \x1B[3mNone\x1B[0m values. \
-                                    \nCI dict: {thresholds_ci} \nCU dict: {thresholds_cu}")
-
-
-            ci = round(self.ci[feature] * 100, 2)
-            cu = round(self.cu[feature] * 100, 2)
-
-            explanation_text = f'The feature "{feature}", which is of ' \
-                                   f'{ci_text} (CI={ci}%), is {cu_text} ' \
-                                   f'for its prediction (CU={cu}%).'
-
-            explanation_texts.append(explanation_text)
-
-        return explanation_texts
 
     def plot_ciu(self, plot_mode='default', include='all', sort='ci', color_blind=None,
                  color_fill_ci='#7fffd44d', color_edge_ci='#66CDAA',
@@ -165,16 +102,17 @@ class CiuObject:
 
             for m in range(len(data)):
                 ax.barh(y_pos[m], data[m], color=cmap1(my_norm(cu[m])),
-                        edgecolor="#808080", zorder=2)
+                        edgecolor="#808080")
 
+        # Add colorblind flags Vlad
         if plot_mode == "overlap":
             plt.xlabel("CI and relative CU")
 
             for m in range(len(data)):
                 ax.barh(y_pos[m], data[m], color=color_fill_ci,
-                        edgecolor=color_edge_ci, linewidth=1.5, zorder=2)
+                        edgecolor=color_edge_ci, linewidth=1.5)
                 ax.barh(y_pos[m], cu[m] * data[m], color=color_fill_cu,
-                        edgecolor=color_edge_cu, linewidth=1.5, zorder=2)
+                        edgecolor=color_edge_cu, linewidth=1.5)
 
         if plot_mode == "combined":
             plt.xlabel("CI and relative CU")
@@ -183,8 +121,8 @@ class CiuObject:
             cbar.set_label('CU', rotation=0, labelpad=25)
 
             for m in range(len(data)):
-                ax.barh(y_pos[m], data[m], color="#ffffff66", edgecolor="#808080", zorder=2)
-                ax.barh(y_pos[m], cu[m] * data[m], color=cmap1(my_norm(cu[m])), zorder=2)
+                ax.barh(y_pos[m], data[m], color="#ffffff66", edgecolor="#808080")
+                ax.barh(y_pos[m], cu[m] * data[m], color=cmap1(my_norm(cu[m])))
 
         ax.set_facecolor(color="#D9D9D9")
         ax.set_xlim(0, 1)
