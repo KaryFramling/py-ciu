@@ -1,8 +1,7 @@
 import pandas as pd
+pd.options.mode.chained_assignment = None
 import random
 from ciu.ciu_object import CiuObject
-import numpy as np
-pd.options.mode.chained_assignment = None
 
 def _generate_samples(case, feature_names, min_maxs, samples, indices,
                       category_mapping):
@@ -17,6 +16,7 @@ def _generate_samples(case, feature_names, min_maxs, samples, indices,
             else:
                 min_val = min_maxs[feature_j][0]
                 max_val = min_maxs[feature_j][1]
+
                 sample_entry[feature_j] = random.uniform(min_val, max_val)
                 # check if feature_j, feature_k in same category;
                 # if so, set feature_k to 0 if feature_j is 1
@@ -31,12 +31,7 @@ def _generate_samples(case, feature_names, min_maxs, samples, indices,
         # set categorical values that would otherwise not have a category
         # assigned
         for categories in category_mapping.values():
-            is_activated = False
-            for category in categories:
-                try:
-                    if (sample_entry[category] == 1).any(): is_activated = True
-                except AttributeError:
-                    if sample_entry[category] == 1: is_activated = True
+            is_activated = any(sample_entry[category] == 1 for category in categories)
             if not is_activated:
                 category = categories[random.randint(0, len(categories) -1)]
                 sample_entry[category] = 1
@@ -44,9 +39,10 @@ def _generate_samples(case, feature_names, min_maxs, samples, indices,
 
     return rows
 
+
 def determine_ciu(
         case, predictor, dataset=None, min_maxs=None, samples=1000,
-        prediction_index=None, category_mapping=None, intermediate_concepts=[]):
+        prediction_index=None, category_mapping=None, feature_interactions=[]):
     """
     Determines contextual importance and utility for a given case.
 
@@ -63,7 +59,7 @@ def determine_ciu(
     :param category_mapping: Mapping of one-hot encoded categorical variables to
                              list of categories and category name. Defaults to
                              ``None``.
-    :param intermediate_concepts: List of {key: list} tuples of features whose
+    :param feature_interactions: List of {key: list} tuples of features whose
                                  interactions should be evaluated. Defaults to
                                  ``[]``.
 
@@ -76,11 +72,12 @@ def determine_ciu(
         category_mapping = {}
 
     for i in case.columns:
-        case[i] = case[i].astype(float)
+      case[i] = case[i].astype(float)
+
 
     if min_maxs is None:
         try:
-            min_maxs = {i: [min(list(map(float, dataset[i]))), max(list(map(float, dataset[i]))),
+            min_maxs = {i: [min(list(map(float, dataset[i]))), max(list(map(float, dataset[i]))), 
                             isinstance(min(dataset[i]), float)] for i in case.columns}
 
         except:
@@ -136,27 +133,18 @@ def determine_ciu(
                     [prob[prediction_index] for prob in all_preds[ind * samples + ind : (ind + 1) * samples + ind + 1]] \
                         for ind, feat in enumerate(min_maxs.keys())}
 
-    for intermediate_concept in intermediate_concepts:
-        interaction_name = list(intermediate_concept.keys())[0]
-        features = list(intermediate_concept.values())[0]
+    for feature_interaction in feature_interactions:
+        interaction_name = list(feature_interaction.keys())[0]
+        features = list(feature_interaction.values())[0]
         indices = [list(min_maxs.keys()).index(feature) for feature in features]
-
         feature_samples = _generate_samples(
             case.to_dict('series'), min_maxs.keys(), min_maxs, samples, indices, category_mapping
         )
 
-        try:
-            feature_samples = pd.DataFrame(feature_samples)
-            predictions[interaction_name] = \
-                predictor(feature_samples) if prediction_index is None \
-                    else [prob[prediction_index] for \
-                          prob in predictor(feature_samples)]
-        except ValueError:
-            feature_samples = pd.DataFrame(feature_samples, dtype=float)
-            predictions[interaction_name] = \
-                predictor(feature_samples) if prediction_index is None \
-                    else [prob[prediction_index] for \
-                          prob in predictor(feature_samples)]
+        predictions[interaction_name] = \
+            predictor(feature_samples) if prediction_index is None \
+                else [prob[prediction_index] for \
+                      prob in predictor(pd.DataFrame(feature_samples))]
 
     abs_max = None
     abs_min = None
@@ -183,13 +171,13 @@ def determine_ciu(
                 abs_min = feature_min
 
     # determine absolute min/max, also considering feature interactions
-    for intermediate_concept in intermediate_concepts:
-        intermediate_concept_name = list(intermediate_concept.keys())[0]
-        interaction_max = max(predictions[intermediate_concept_name])
+    for feature_interaction in feature_interactions:
+        interaction_name = list(feature_interaction.keys())[0]
+        interaction_max = max(predictions[interaction_name])
         if abs_max is None or abs_max < interaction_max:
             abs_max = interaction_max
 
-        interaction_min = min(predictions[intermediate_concept_name])
+        interaction_min = min(predictions[interaction_name])
         if abs_min is None or abs_min > interaction_min:
             abs_min = interaction_min
 
@@ -199,7 +187,7 @@ def determine_ciu(
         if feature in category_mapping.keys():
             encoded_feature = None
             for encoded_feature_j in min_maxs.keys():
-                if encoded_feature_j in category_mapping[feature] and list(case[encoded_feature_j].to_dict().values())[0] == 1:
+                if list(case[encoded_feature_j].to_dict().values())[0] == 1 and encoded_feature_j in category_mapping[feature]:
                     encoded_feature = encoded_feature_j
             c_min = min(predictions[encoded_feature])
             c_max = max(predictions[encoded_feature])
@@ -220,13 +208,13 @@ def determine_ciu(
         c_maxs[feature] = c_max
 
     # compute CI/CU for feature interactions
-    intermediate_concept_names = [
-        "_".join(features) for features in intermediate_concepts
+    interaction_names = [
+        "_".join(features) for features in feature_interactions
     ]
 
-    for intermediate_concept_name in intermediate_concept_names:
-        c_min = min(predictions[intermediate_concept_name])
-        c_max = max(predictions[intermediate_concept_name])
+    for interaction_name in interaction_names:
+        c_min = min(predictions[interaction_name])
+        c_max = max(predictions[interaction_name])
         n = case_prediction
         ci = (c_max - c_min) / (abs_max - abs_min)
         if (c_max - c_min) == 0:
@@ -234,9 +222,9 @@ def determine_ciu(
         else:
             cu = (n - c_min) / (c_max - c_min)
         if cu == 0: cu = 0.001
-        cis[intermediate_concept_name] = ci
-        cus[intermediate_concept_name] = cu
-        c_mins[intermediate_concept_name] = c_min
-        c_maxs[intermediate_concept_name] = c_max
+        cis[interaction_name] = ci
+        cus[interaction_name] = cu
+        c_mins[interaction_name] = c_min
+        c_maxs[interaction_name] = c_max
 
-    return CiuObject(cis, cus, c_mins, c_maxs, outval, intermediate_concept_names)
+    return CiuObject(cis, cus, c_mins, c_maxs, outval, interaction_names)
