@@ -185,7 +185,7 @@ boston_ciu.plot_ciu(plot_mode="combined", color_blind='tritanopia', sort='cu')
 ![](images/modified_plot.png)
 ## Authors
 * [Vlad Apopei](https://github.com/vladapopei/)
-
+* [Timotheus Kampik](https://github.com/TimKam/)
 * [Kary Främling](https://github.com/KaryFramling)
 
 The current version of py-ciu re-uses research code provided by [Timotheus Kampik](https://github.com/TimKam/) and replaces it. The old code is available in the branch "Historical".
