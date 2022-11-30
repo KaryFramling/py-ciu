@@ -2,10 +2,11 @@ import pandas as pd
 pd.options.mode.chained_assignment = None
 import random
 from ciu.ciu_object import CiuObject
+import numpy as np
+
 
 def _generate_samples(case, feature_names, min_maxs, samples, indices,
                       category_mapping):
-
     rows = [case]
     for _ in range(samples):
         sample_entry = {}
@@ -37,15 +38,16 @@ def _generate_samples(case, feature_names, min_maxs, samples, indices,
                 except AttributeError:
                     if sample_entry[category] == 1: is_activated = True
             if not is_activated:
-                category = categories[random.randint(0, len(categories) -1)]
+                category = categories[random.randint(0, len(categories) - 1)]
                 sample_entry[category] = 1
         rows.append(sample_entry)
 
     return rows
 
+
 def determine_ciu(
         case, predictor, dataset=None, min_maxs=None, samples=1000,
-        prediction_index=None, category_mapping=None, intermediate_concepts=[]):
+        prediction_index=None, category_mapping=None, intermediate_concepts=None):
     """
     Determines contextual importance and utility for a given case.
 
@@ -70,6 +72,8 @@ def determine_ciu(
              contextual importance value, contextual utility value
     """
 
+    if intermediate_concepts is None:
+        intermediate_concepts = []
 
     if category_mapping is None:
         category_mapping = {}
@@ -81,11 +85,9 @@ def determine_ciu(
         try:
             min_maxs = {i: [min(list(map(float, dataset[i]))), max(list(map(float, dataset[i]))),
                             isinstance(min(dataset[i]), float)] for i in case.columns}
-
         except:
-          print("Logic Error: You must provide either min_max values or a dataset to infer them from")
-          raise
-
+            print("Logic Error: You must provide either min_max values or a dataset to infer them from")
+            raise
 
     category_names = list(category_mapping.keys())
     feature_names_decoded = []
@@ -105,22 +107,20 @@ def determine_ciu(
     cus = {}
     c_mins = {}
     c_maxs = {}
-    outval = {'outval' : predictor(case)[0][prediction_index] if prediction_index is not None else predictor(case)[0]}
+    outval = {'outval': predictor(case)[0][prediction_index] if prediction_index is not None else predictor(case)[0]}
 
     case_prediction = \
         predictor(case)[0] if prediction_index is None \
-        else predictor(case)[0][prediction_index]
-
+            else predictor(case)[0][prediction_index]
 
     all_samples = []
 
     for index_i, feature_i in enumerate(min_maxs.keys()):
         feature_samples = _generate_samples(
-            case.to_dict('series'), min_maxs.keys(), min_maxs, samples, [index_i],
+            case.iloc[0, :].to_dict(), min_maxs.keys(), min_maxs, samples, [index_i],
             category_mapping
         )
         all_samples.append(feature_samples)
-
 
     joined_samples = [j for i in all_samples for j in i]
 
@@ -131,9 +131,9 @@ def determine_ciu(
         all_samples_flat = pd.DataFrame(joined_samples, dtype=float)
         all_preds = predictor(all_samples_flat)
 
-    predictions = {feat: all_preds[ind * samples + ind : (ind + 1) * samples + ind + 1] if prediction_index is None else \
-                    [prob[prediction_index] for prob in all_preds[ind * samples + ind : (ind + 1) * samples + ind + 1]] \
-                        for ind, feat in enumerate(min_maxs.keys())}
+    predictions = {feat: all_preds[ind * samples + ind: (ind + 1) * samples + ind + 1] if prediction_index is None else \
+        [prob[prediction_index] for prob in all_preds[ind * samples + ind: (ind + 1) * samples + ind + 1]] \
+                   for ind, feat in enumerate(min_maxs.keys())}
 
     for intermediate_concept in intermediate_concepts:
         interaction_name = list(intermediate_concept.keys())[0]
@@ -141,7 +141,7 @@ def determine_ciu(
         indices = [list(min_maxs.keys()).index(feature) for feature in features]
 
         feature_samples = _generate_samples(
-            case.to_dict('series'), min_maxs.keys(), min_maxs, samples, indices, category_mapping
+            case.iloc[0, :].to_dict(), min_maxs.keys(), min_maxs, samples, indices, category_mapping
         )
 
         try:
