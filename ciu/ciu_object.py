@@ -5,24 +5,52 @@ import numpy as np
 
 
 class CiuObject:
-    def __init__(self, ci, cu, c_mins, c_maxs, outval, intermediate_concepts):
+    def __init__(self, ci, cu, c_mins, c_maxs, outval, intermediate_concepts, concept_names):
         self.ci = ci
         self.cu = cu
         self.c_mins = c_mins
         self.c_maxs = c_maxs
         self.outval = outval
         self.intermediate_concepts = intermediate_concepts
+        self.concept_names = concept_names
+
+    def _get_target_concept(self, target_concept, ind_inputs=None):
+        # Initialising an ideal inputs copy including all the inputs of the concept
+        ind_inputs_copy = []
+        out_ci = self.ci
+        for concept in self.intermediate_concepts:
+            if target_concept in concept.keys():
+                for feature_list in concept.values():
+                    for feature in feature_list:
+                        out_ci[feature] = (self.c_maxs[feature] - self.c_mins[feature]) / (
+                                    self.c_maxs[target_concept] - self.c_mins[target_concept])
+                        ind_inputs_copy.append(list(self.ci.keys()).index(feature))
+
+        # Checking if there are user inputs, otherwise setting them to ideal copy
+        if ind_inputs is None:
+            ind_inputs = ind_inputs_copy
+
+        # If there are inputs but outside of concept, toss a warning and set to ideal copy
+        elif len(ind_inputs) >= 1:
+            for i in ind_inputs:
+                if i not in ind_inputs_copy:
+                    print("WARNING: The indices selected must be a subset of the target concept.\n"
+                          f"Index number {i} is outside of the concept scope.")
+                    ind_inputs = ind_inputs_copy
+                    break
+
+        return out_ci, ind_inputs
 
     @staticmethod
-    def _filter_feature_names(feature_names, intermediate_concepts, include_intermediate_concepts, ind_inputs=None):
+    def _filter_feature_names(feature_names, concept_names, include_intermediate_concepts, ind_inputs=None):
         feature_names_final = []
-        original = [x for x in feature_names if x not in intermediate_concepts]
+        original = [x for x in feature_names if x not in concept_names]
         exclude_intermediate_concepts = include_intermediate_concepts == 'no'
         exclude_ordinary = include_intermediate_concepts == 'only'
         for feature_name in feature_names:
             exclude_feature = \
-                (exclude_intermediate_concepts and feature_name in intermediate_concepts) or \
-                (exclude_ordinary and feature_name not in intermediate_concepts)
+                (exclude_intermediate_concepts and feature_name in concept_names) or \
+                (exclude_ordinary and feature_name not in concept_names)
             if not exclude_feature:
                 if exclude_ordinary:
                     feature_names_final.append(feature_name)
@@ -33,8 +61,26 @@ class CiuObject:
                     list(original)[index] for index in ind_inputs if list(original)[index] not in feature_names_final)
         return feature_names_final
 
-    def explain_tabular(self, include_intermediate_concepts=None, ind_inputs=None):
-        out_df = pd.DataFrame.from_dict([self.ci,
+    def explain_tabular(self, include_intermediate_concepts=None, ind_inputs=None, target_concept=None):
+        """
+        :param str target_concept: defines which intermediate concept to explain;
+        :param list ind_inputs: list of feature indexes to produce a tabular explanation for, it will include all of them by default;
+                                NOTE: this can add extra indexes to explain even if the include_intermediate_concepts param is set to 'only'
+        :param str include_intermediate_concepts: define whether to include 'no' intermediate concepts or 'only' intermediate concepts;
+                                                    it will include all intermediate concepts and all independent features by default
+        :return: dataframe output_df: Pandas dataframe containing the output data
+        """
+        if target_concept:
+            # Removing the inclusion of the other concepts automatically
+            include_intermediate_concepts = None
+            out_ci, ind_inputs = self._get_target_concept(
+                target_concept, ind_inputs
+            )
+
+        if target_concept is None:
+            out_ci = self.ci
+
+        out_df = pd.DataFrame.from_dict([out_ci,
                                          self.cu,
                                          self.c_mins,
                                          self.c_maxs])
@@ -43,7 +89,7 @@ class CiuObject:
 
         feature_names_out = self._filter_feature_names(
             self.ci.keys(),
-            self.intermediate_concepts,
+            self.concept_names,
             include_intermediate_concepts,
             ind_inputs
         )
@@ -55,15 +101,17 @@ class CiuObject:
 
         return output_df
 
-    def explain_text(self, include_intermediate_concepts=None, ind_inputs=None, thresholds_ci=None, thresholds_cu=None):
+    def explain_text(self, include_intermediate_concepts=None, ind_inputs=None, thresholds_ci=None, thresholds_cu=None,
+                     target_concept=None):
         """
+        :param str target_concept: defines which intermediate concept to explain;
         :param list ind_inputs: list of feature indexes to produce a textual explanation for, it will include all of them by default;
                                 NOTE: this can add extra indexes to explain even if the include_intermediate_concepts param is set to 'only'
         :param str include_intermediate_concepts: define whether to include 'no' intermediate concepts or 'only' intermediate concepts;
                                                     it will include all intermediate concepts and all independent features by default
         :param dict thresholds_ci: dictionary containing the label and ceiling value for the CI thresholds
         :param dict thresholds_cu: dictionary containing the label and ceiling value for the CU thresholds
-        :return:
+        :return: list explanation_texts: list containing explanation strings
         """
 
         if thresholds_ci is None:
@@ -87,9 +135,19 @@ class CiuObject:
             raise ValueError(f"The dictionaries containing the CI/CU thresholds must have at least 2 elements. \
                              \nCI dict: {thresholds_ci} \nCU dict: {thresholds_cu}")
 
+        if target_concept:
+            # Removing the inclusion of the other concepts automatically
+            include_intermediate_concepts = None
+            out_ci, ind_inputs = self._get_target_concept(
+                target_concept, ind_inputs
+            )
+
+        if target_concept is None:
+            out_ci = self.ci
+
         feature_names = self._filter_feature_names(
             self.ci.keys(),
-            self.intermediate_concepts,
+            self.concept_names,
             include_intermediate_concepts,
             ind_inputs
         )
@@ -99,7 +157,7 @@ class CiuObject:
         for feature in list(feature_names):
             try:
                 for k, v in thresholds_ci.items():
-                    if self.ci[feature] <= v:
+                    if out_ci[feature] <= v:
                         ci_text = k
                         break
 
@@ -111,7 +169,7 @@ class CiuObject:
                 raise TypeError(f"The dictionaries containing the CI/CU thresholds cannot have \x1B[3mNone\x1B[0m values. \
                                     \nCI dict: {thresholds_ci} \nCU dict: {thresholds_cu}") from e
 
-            ci = round(self.ci[feature] * 100, 2)
+            ci = round(out_ci[feature] * 100, 2)
             cu = round(self.cu[feature] * 100, 2)
 
             explanation_text = f'The feature "{feature}", which is of ' \
@@ -122,12 +180,13 @@ class CiuObject:
 
         return explanation_texts
 
-    def plot_ciu(self, plot_mode='default', include_intermediate_concepts=None, ind_inputs=None, sort='ci',
-                 color_blind=None,
+    def plot_ciu(self, plot_mode='default', include_intermediate_concepts=None,
+                 ind_inputs=None, target_concept=None, sort='ci', color_blind=None,
                  color_fill_ci='#7fffd44d', color_edge_ci='#66CDAA',
                  color_fill_cu="#006400cc", color_edge_cu="#006400"):
 
         """
+        :param str target_concept: defines which intermediate concept to explain;
         :param list ind_inputs: list of feature indexes to produce a plot explanation for, it will include all of them by default;
                                 NOTE: this can add extra indexes to explain even if the include_intermediate_concepts param is set to 'only'
         :param str include_intermediate_concepts: define whether to include 'no' intermediate concepts or 'only' intermediate concepts;
@@ -142,14 +201,28 @@ class CiuObject:
         :param str color_fill_ci: defines the hex or named color for the CI fill in the overlap plot mode.
         """
 
-        data = np.fromiter(self.ci.values(), dtype=float)
+        if target_concept:
+            # Removing the inclusion of the other concepts automatically
+            include_intermediate_concepts = None
+            out_ci, ind_inputs = self._get_target_concept(
+                target_concept, ind_inputs
+            )
+
+        if target_concept is None:
+            out_ci = self.ci
+
+        data = np.fromiter(out_ci.values(), dtype=float)
         cu = np.fromiter(self.cu.values(), dtype=float)
 
         fig, ax = plt.subplots(figsize=(6, 6))
+
+        if target_concept:
+            fig.suptitle(f"The target concept is {target_concept}")
+
         feature_names_prelim = self.ci.keys()
         feature_names = self._filter_feature_names(
             feature_names_prelim,
-            self.intermediate_concepts,
+            self.concept_names,
             include_intermediate_concepts,
             ind_inputs
         )

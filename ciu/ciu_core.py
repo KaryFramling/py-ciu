@@ -238,4 +238,4 @@ def determine_ciu(
         c_mins[intermediate_concept_name] = c_min
         c_maxs[intermediate_concept_name] = c_max
 
-    return CiuObject(cis, cus, c_mins, c_maxs, outval, intermediate_concept_names)
+    return CiuObject(cis, cus, c_mins, c_maxs, outval, intermediate_concepts, intermediate_concept_names)
