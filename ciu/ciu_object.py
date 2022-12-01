@@ -17,7 +17,7 @@ class CiuObject:
     def _get_target_concept(self, target_concept, ind_inputs=None):
         # Initialising an ideal inputs copy including all the inputs of the concept
         ind_inputs_copy = []
-        out_ci = self.ci
+        out_ci = self.ci.copy()
         for concept in self.intermediate_concepts:
             if target_concept in concept.keys():
                 for feature_list in concept.values():
