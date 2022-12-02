@@ -7,7 +7,7 @@ def get_ames_gbm_test():
     import xgboost as xgb
     from sklearn.model_selection import train_test_split
 
-    df = pd.read_csv('AmesHousing.csv')
+    df = pd.read_csv('data/AmesHousing.csv')
 
     #Checking for missing data
     missing_data_count = df.isnull().sum()
