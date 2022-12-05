@@ -186,7 +186,7 @@ boston_ciu.plot_ciu(plot_mode="combined", color_blind='tritanopia', sort='cu')
 CIU can use named feature coalitions and structured vocabularies. 
 Such vocabularies allow explanations at any abstraction level and can make explanations interactive.
 
-###Ames Housing Example
+### Ames Housing Example
 Ames housing is a data set about properties in the town Ames in the US. 
 It contains over 80 features that can be used for learning to estimate the sales price. 
 The following code imports the data set, does some pre-processing and trains a Gradient Boosting model:
