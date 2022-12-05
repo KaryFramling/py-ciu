@@ -70,13 +70,13 @@ def get_ames_gbm_test():
 
 
     intermediate = [
-        {"Garage":list(df.columns[[58,59,60,61,62,63]])},
-        {"Basement":list(df.columns[[30,31,33,34,35,36,37,38,47,48]])},
+        {"Garage":[c for c in df.columns if 'Garage' in c]},
+        {"Basement":[c for c in df.columns if 'Bsmt' in c]},
         {"Lot":list(df.columns[[3,4,7,8,9,10,11]])},
         {"Access":list(df.columns[[13,14]])},
         {"House_type":list(df.columns[[1,15,16,21]])},
         {"House_aesthetics":list(df.columns[[22,23,24,25,26]])},
-        {"House_condition":list(df.columns[[17,18,19,20,27,28]])},
+        {"House_condition":list(df.columns[[20,18,21,28,19,29]])},
         {"First_floor_surface":list(df.columns[[43]])},
         {"Above_ground_living area":[c for c in df.columns if 'GrLivArea' in c]}
     ]
