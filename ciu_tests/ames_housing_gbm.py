@@ -64,12 +64,13 @@ def get_ames_gbm_test():
 
     #Splitting and training
     X_train, X_test, y_train, y_test = train_test_split(data, target, test_size=0.3, random_state=123)
-    xg_reg = xgb.XGBRegressor(objective ='reg:squarederror', colsample_bytree = 0.3, learning_rate = 0.1,max_depth = 5, alpha = 10, n_estimators = 10)
+    xg_reg = xgb.XGBRegressor(objective ='reg:squarederror', colsample_bytree = 0.5, learning_rate = 0.1, max_depth = 15, alpha = 10)
 
     xg_reg.fit(X_train,y_train)
 
 
     intermediate = [
+        {"Garage":list(df.columns[[58,59,60,61,62,63]])},
         {"Basement":list(df.columns[[30,31,33,34,35,36,37,38,47,48]])},
         {"Lot":list(df.columns[[3,4,7,8,9,10,11]])},
         {"Access":list(df.columns[[13,14]])},
@@ -81,7 +82,7 @@ def get_ames_gbm_test():
     ]
 
 
-    test_data_ames = X_test.iloc[[1]]
+    test_data_ames = X_test.iloc[[345]]
 
     ciu = determine_ciu(
         test_data_ames,
