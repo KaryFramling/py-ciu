@@ -17,7 +17,7 @@ class CiuObject:
     def _get_target_concept(self, target_concept, ind_inputs=None):
         # Initialising an ideal inputs copy including all the inputs of the concept
         ind_inputs_copy = []
-        out_ci = self.ci.copy()
+        out_ci = self.ci
         for concept in self.intermediate_concepts:
             if target_concept in concept.keys():
                 for feature_list in concept.values():
@@ -101,8 +101,7 @@ class CiuObject:
 
         return output_df
 
-    def explain_text(self, include_intermediate_concepts=None, ind_inputs=None, thresholds_ci=None, thresholds_cu=None,
-                     target_concept=None):
+    def explain_text(self, include_intermediate_concepts=None, ind_inputs=None, thresholds_ci=None, thresholds_cu=None, target_concept=None):
         """
         :param str target_concept: defines which intermediate concept to explain;
         :param list ind_inputs: list of feature indexes to produce a textual explanation for, it will include all of them by default;
@@ -136,7 +135,7 @@ class CiuObject:
                              \nCI dict: {thresholds_ci} \nCU dict: {thresholds_cu}")
 
         if target_concept:
-            # Removing the inclusion of the other concepts automatically
+            #Removing the inclusion of the other concepts automatically
             include_intermediate_concepts = None
             out_ci, ind_inputs = self._get_target_concept(
                 target_concept, ind_inputs
@@ -154,6 +153,18 @@ class CiuObject:
 
         explanation_texts = []
 
+        if target_concept:
+            for k, v in thresholds_cu.items():
+                if self.cu[target_concept] <= v:
+                    cu_concept_text = k
+                    break
+
+            cu_concept = round(self.cu[target_concept] * 100, 2)
+
+            concept_text = f'The intermediate concept "{target_concept}", is {cu_concept_text} ' \
+                                       f'for its prediction (CU={cu_concept}%).'
+            explanation_texts.append(concept_text)
+
         for feature in list(feature_names):
             try:
                 for k, v in thresholds_ci.items():
@@ -169,12 +180,13 @@ class CiuObject:
                 raise TypeError(f"The dictionaries containing the CI/CU thresholds cannot have \x1B[3mNone\x1B[0m values. \
                                     \nCI dict: {thresholds_ci} \nCU dict: {thresholds_cu}") from e
 
+
             ci = round(out_ci[feature] * 100, 2)
             cu = round(self.cu[feature] * 100, 2)
 
             explanation_text = f'The feature "{feature}", which is of ' \
-                               f'{ci_text} (CI={ci}%), is {cu_text} ' \
-                               f'for its prediction (CU={cu}%).'
+                                       f'{ci_text} (CI={ci}%), is {cu_text} ' \
+                                       f'for its prediction (CU={cu}%).'
 
             explanation_texts.append(explanation_text)
 
