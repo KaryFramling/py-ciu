@@ -479,7 +479,7 @@ ciu_ames.plot_ciu(target_concept="Garage", plot_mode="overlap")
 
 This vocabulary is just an example of what kind of concepts a human typically deals with. 
 Vocabularies can be built freely (or learned, if possible) and used freely, even so that different vocabularies can be used with different users.
-## Authors
+
 ## Authors
 * [Vlad Apopei](https://github.com/vladapopei/)
 * [Timotheus Kampik](https://github.com/TimKam/)
