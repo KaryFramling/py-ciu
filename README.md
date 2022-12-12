@@ -61,6 +61,7 @@ $$
 
 where $yumin=ymin$ if $A$ is positive and $yumin=ymax$ if $A$ is
 negative.
+
 ## Usage
 
 First, install the required dependencies. NOTE: this is to be run in your environment's terminal; 
@@ -182,11 +183,179 @@ boston_ciu.plot_ciu(plot_mode="combined", color_blind='tritanopia', sort='cu')
 ```
 ![](images/modified_plot.png)
 
+## Contextual influence
+
+Contextual influence and can be calculated from CI and CU as follows:
+
+$$
+\phi_{j,\{i\},\{I\}}(x)=\omega_{j,\{i\},\{I\}}(x)(CU_{j,\{i\}}(x) - \phi_{0}),
+$$
+
+where $\phi_{0}$ is the *baseline/reference* value ($y(u(0))$ in the
+plot). For instance, $\phi_{0}=0.5$ signifies using the average utility
+value $0.5$ as the baseline, which is the case in the $age$ plot above.
+An explanation using Contextual influence on the titanic dataset can be obtained as follows:
+
+*Note*: the dataset and model used are not identical to the R version, 
+therefore the results will see a slight variance. 
+```python
+import pandas as pd
+from sklearn.ensemble import RandomForestClassifier
+from ciu.ciu_core import determine_ciu
+
+data = pd.read_csv("https://raw.githubusercontent.com/KaryFramling/py-ciu/master/ciu_tests/data/titanic.csv")
+data = data.drop(data.columns[0], axis=1)
+unused = ['PassengerId','Cabin','Name','Ticket']
+
+for col in unused:
+    data = data.drop(col, axis=1)
+
+from sklearn.preprocessing import LabelEncoder
+data = data.dropna().apply(LabelEncoder().fit_transform)
+train = data.drop('Survived', axis=1)
+
+model = RandomForestClassifier(n_estimators=100)
+model.fit(train, data.Survived)
+```
+Creating a new instance for the CIU Object
+
+```python
+# Create test instance (8-year old boy)
+new_passenger = pd.DataFrame.from_dict({"Pclass" : [1], "Sex": [1], "Age": [8], "SibSp": [0], "Parch": [0], "Fare": [72], "Embarked": [2]})
+
+ciu_titanic = determine_ciu(
+    new_passenger,
+    model.predict_proba,
+    train.to_dict('list'),
+    samples = 1000,
+    prediction_index = 1,
+    intermediate_concepts=intermediate_tit
+)
+```
+
+Output a barplot using Contextual Influence:
+```python
+ciu_titanic.plot_ciu(use_influence=True, include_intermediate_concepts='no')
+```
+
+![](images/titanic_influence.png)<!-- -->
+
+**Remark:** The Equation for Contextual influence is similar to the
+definition of Shapley values for linear models, except that the input
+value $x_{i}$ is replaced by its utility value(s) $CU_{j,\{i\}}(x)$. In
+practice, **all *Additive Feature Attribution (AFA)* methods estimate
+influence values, not feature importance. Most state-of-the-art methods
+such as *Shapley values*, *LIME*,** are AFA methods.
+
+Influence values give no counter-factual information and are easily
+misinterpreted. Below, we create a Shapley value explanation using the
+IML package. In that explanation, for instance the close-to-zero Shapley
+value for $Parch$ gives the impression that it’s a non-important
+feature, which is clearly wrong based on the CIU explanation.
+
+``` r
+library(iml)
+predictor <- Predictor$new(model_rf, data = subset(titanic_train, select=-survived), y = titanic_train[,"survived"])
+shapley <- Shapley$new(predictor, x.interest = new_passenger)
+d <- shapley$results; d <- d[d$class=='yes',]; d$sign <- d$phi>=0
+p <- ggplot(d) + geom_col(aes(x=reorder(feature.value, phi), y=phi, fill=sign)) +
+  coord_flip() +
+  labs(x ="", y = expression(phi)) + theme(legend.position = "none") +
+  scale_fill_manual("legend", values = c("FALSE" = "firebrick", "TRUE" = "steelblue"))
+print(p)
+```
+
+![](https://raw.githubusercontent.com/KaryFramling/ciu/master/README_files/figure-gfm/shapley_titanic-1.png)
+
+It might be worth mentioning also that the Shapley value explanation has
+a much greater variance than the CIU (and Contextual influence)
+explanation with same number of samples. This is presumably due to the
+fundamental difference between estimating min/max output values for CIU,
+compared to estimating a kind of gradient with AFA methods.
+
 ## Intermediate Concepts
 CIU can use named feature coalitions and structured vocabularies. 
 Such vocabularies allow explanations at any abstraction level and can make explanations interactive.
 
-### Ames Housing Example
+###Titanic Example
+
+We define a small vocabulary for Titanic as follows:
+
+```python
+intermediate_tit = [
+        {"Wealth":['Pclass', 'Fare']},
+        {"Family":['SibSp', 'Parch']},
+        {"Gender":['Sex']},
+        {"Age_years":['Age']},
+        {"Embarked_Place":['Embarked']}
+    ]
+```
+
+Then we create a new CIU object that uses that vocabulary and get
+top-level explanation.
+
+```python
+ciu_titanic = determine_ciu(
+    new_passenger,
+    model.predict_proba,
+    train.to_dict('list'),
+    samples = 1000,
+    prediction_index = 1,
+    intermediate_concepts=intermediate_tit
+)
+```
+
+First barplot explanation:
+
+```python
+ciu_titanic.plot_ciu(include_intermediate_concepts='only', plot_mode='overlap')
+```
+
+![](images/titanic_intermediate.png)<!-- -->
+
+Then explain WEALTH and FAMILY
+
+```python
+ciu_titanic.plot_ciu(target_concept="Family", plot_mode="overlap")
+```
+
+![](images/titanic_family.png)<!-- -->
+
+``` r
+ciu_titanic.plot_ciu(target_concept="Wealth", plot_mode="overlap")
+```
+
+![](images/titanic_wealth.png)<!-- -->
+
+Same thing using textual explanations:
+
+```python
+ciu_titanic.explain_text(include_intermediate_concepts="only")
+```
+
+    ## The feature "Wealth", which is of normal importance (CI=46.15%), is somewhat typical for its prediction (CU=30.95%).
+    ## The feature "Family", which is of normal importance (CI=45.05%), is somewhat typical for its prediction (CU=39.02%).
+    ## The feature "Gender", which is of very low importance (CI=19.76%), is not typical for its prediction (CU=0.1%).
+    ## The feature "Age_years", which is of high importance (CI=75.82%), is very typical for its prediction (CU=89.86%).
+    ## The feature "Embarked_Place", which is of very low importance (CI=6.59%), is very typical for its prediction (CU=100.0%)
+
+```python
+ciu_titanic.explain_text(target_concept="Family")
+```
+
+    ## 'The intermediate concept "Family", is somewhat typical for its prediction (CU=39.02%).',
+    ## 'The feature "SibSp", which is of normal importance (CI=46.34%), is very typical for its prediction (CU=84.21%).',
+    ## 'The feature "Parch", which is of normal importance (CI=56.1%), is not typical for its prediction (CU=0.1%).'
+
+```python
+ciu_titanic.explain_text(target_concept="Wealth")
+```
+
+    ## 'The intermediate concept "Wealth", is somewhat typical for its prediction (CU=30.95%).',
+    ## 'The feature "Pclass", which is of very low importance (CI=4.76%), is not typical for its prediction (CU=0.1%).',
+    ## 'The feature "Fare", which is of low importance (CI=36.51%), is typical for its prediction (CU=58.7%).'
+
+###Ames Housing Example
 Ames housing is a data set about properties in the town Ames in the US. 
 It contains over 80 features that can be used for learning to estimate the sales price. 
 The following code imports the data set, does some pre-processing and trains a Gradient Boosting model:
@@ -310,6 +479,7 @@ ciu_ames.plot_ciu(target_concept="Garage", plot_mode="overlap")
 
 This vocabulary is just an example of what kind of concepts a human typically deals with. 
 Vocabularies can be built freely (or learned, if possible) and used freely, even so that different vocabularies can be used with different users.
+## Authors
 ## Authors
 * [Vlad Apopei](https://github.com/vladapopei/)
 * [Timotheus Kampik](https://github.com/TimKam/)
