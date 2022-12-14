@@ -474,7 +474,22 @@ ciu_ames.plot_ciu(target_concept="Garage", plot_mode="overlap")
 
 This vocabulary is just an example of what kind of concepts a human typically deals with. 
 Vocabularies can be built freely (or learned, if possible) and used freely, even so that different vocabularies can be used with different users.
-## Authors
+
+# Related resources
+
+The original R implementation can be found at: <https://github.com/KaryFramling/ciu>
+
+There are also two implementations of CIU for explaining images:
+
+- R: <https://github.com/KaryFramling/ciu.image>
+
+- Python: <https://github.com/KaryFramling/py.ciu.image>
+
+Image explanation packages can be considered to be at proof-of-concept
+level (Nov. 2022). Future work on image explanation will presumably
+focus on the Python version, due to the extensive use of deep neural
+networks that tend to be implemented mainly for Python.
+
 ## Authors
 * [Vlad Apopei](https://github.com/vladapopei/)
 * [Timotheus Kampik](https://github.com/TimKam/)
