@@ -253,19 +253,14 @@ IML package. In that explanation, for instance the close-to-zero Shapley
 value for $Parch$ gives the impression that it’s a non-important
 feature, which is clearly wrong based on the CIU explanation.
 
-``` r
-library(iml)
-predictor <- Predictor$new(model_rf, data = subset(titanic_train, select=-survived), y = titanic_train[,"survived"])
-shapley <- Shapley$new(predictor, x.interest = new_passenger)
-d <- shapley$results; d <- d[d$class=='yes',]; d$sign <- d$phi>=0
-p <- ggplot(d) + geom_col(aes(x=reorder(feature.value, phi), y=phi, fill=sign)) +
-  coord_flip() +
-  labs(x ="", y = expression(phi)) + theme(legend.position = "none") +
-  scale_fill_manual("legend", values = c("FALSE" = "firebrick", "TRUE" = "steelblue"))
-print(p)
+```python
+import shap
+explainer = shap.Explainer(model, train)
+shap_values = explainer(new_passenger)
+shap.plots.bar(shap_values[0,:,1], order=np.argsort(shap_values[0,:,1].values)[::-1])
 ```
 
-![](https://raw.githubusercontent.com/KaryFramling/ciu/master/README_files/figure-gfm/shapley_titanic-1.png)
+![](images/titanic_shap.png)
 
 It might be worth mentioning also that the Shapley value explanation has
 a much greater variance than the CIU (and Contextual influence)
@@ -479,7 +474,7 @@ ciu_ames.plot_ciu(target_concept="Garage", plot_mode="overlap")
 
 This vocabulary is just an example of what kind of concepts a human typically deals with. 
 Vocabularies can be built freely (or learned, if possible) and used freely, even so that different vocabularies can be used with different users.
-
+## Authors
 ## Authors
 * [Vlad Apopei](https://github.com/vladapopei/)
 * [Timotheus Kampik](https://github.com/TimKam/)
