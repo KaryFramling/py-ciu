@@ -8,7 +8,7 @@ def get_titanic_rf():
     from sklearn.ensemble import RandomForestClassifier
     from ciu.ciu_core import determine_ciu
 
-    data = pd.read_csv("data/titanic.csv")
+    data = pd.read_csv("https://raw.githubusercontent.com/KaryFramling/py-ciu/master/ciu_tests/data/titanic.csv")
     data = data.drop(data.columns[0], axis=1)
     unused = ['PassengerId','Cabin','Name','Ticket']
 
@@ -19,6 +19,7 @@ def get_titanic_rf():
     data = data.dropna().apply(LabelEncoder().fit_transform)
     train = data.drop('Survived', axis=1)
 
+    # Create test instance (8-year old boy)
     new_passenger = pd.DataFrame.from_dict({"Pclass" : [1], "Sex": [1], "Age": [8], "SibSp": [0], "Parch": [0], "Fare": [72], "Embarked": [2]})
 
     model = RandomForestClassifier(n_estimators=100)
@@ -32,7 +33,7 @@ def get_titanic_rf():
             {"Embarked_Place":['Embarked']}
         ]
 
-    ciu_tit = determine_ciu(
+    ciu_titanic = determine_ciu(
         new_passenger,
         model.predict_proba,
         train.to_dict('list'),
@@ -41,4 +42,4 @@ def get_titanic_rf():
         intermediate_concepts=intermediate_tit
     )
 
-    return ciu_tit
+    return ciu_titanic

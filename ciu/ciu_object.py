@@ -192,12 +192,13 @@ class CiuObject:
 
         return explanation_texts
 
-    def plot_ciu(self, plot_mode='default', include_intermediate_concepts=None,
+    def plot_ciu(self, plot_mode='default', include_intermediate_concepts=None, use_influence=False,
                  ind_inputs=None, target_concept=None, sort='ci', color_blind=None,
                  color_fill_ci='#7fffd44d', color_edge_ci='#66CDAA',
                  color_fill_cu="#006400cc", color_edge_cu="#006400"):
 
         """
+        :param bool use_influence: if True the plot will use Contextual Influence;
         :param str target_concept: defines which intermediate concept to explain;
         :param list ind_inputs: list of feature indexes to produce a plot explanation for, it will include all of them by default;
                                 NOTE: this can add extra indexes to explain even if the include_intermediate_concepts param is set to 'only'
@@ -214,7 +215,7 @@ class CiuObject:
         """
 
         if target_concept:
-            # Removing the inclusion of the other concepts automatically
+            #Removing the inclusion of the other concepts automatically
             include_intermediate_concepts = None
             out_ci, ind_inputs = self._get_target_concept(
                 target_concept, ind_inputs
@@ -222,6 +223,12 @@ class CiuObject:
 
         if target_concept is None:
             out_ci = self.ci
+
+        influence = {}
+        if use_influence:
+            for k, v in out_ci.items():
+                influence[k] = v*(self.cu[k]-0.5)
+            out_ci = influence
 
         data = np.fromiter(out_ci.values(), dtype=float)
         cu = np.fromiter(self.cu.values(), dtype=float)
@@ -246,9 +253,10 @@ class CiuObject:
                 cu = np.delete(cu, index - indices_deleted)
                 indices_deleted += 1
 
+
         y_pos = np.arange(len(feature_names))
 
-        if sort == 'ci':
+        if sort in ['ci', 'influence']:
             data, cu, feature_names = (list(t) for t in zip(*sorted(zip(data, cu, feature_names))))
         elif sort == 'cu':
             cu, data, feature_names = (list(t) for t in zip(*sorted(zip(cu, data, feature_names))))
@@ -267,18 +275,26 @@ class CiuObject:
 
         cmap1 = colors.LinearSegmentedColormap.from_list("mycmap", list(zip(nodes, colours)))
 
+
         sm = cm.ScalarMappable(cmap=cmap1, norm=my_norm)
         sm.set_array([])
 
         if plot_mode == "default":
-            cbar = plt.colorbar(sm, ax=plt.gca())
-            cbar.set_label('CU', rotation=0, labelpad=25)
+            if use_influence:
+                plt.xlabel("ϕ")
 
-            plt.xlabel("CI")
+                for m in range(len(data)):
+                  ax.barh(y_pos[m], data[m], color=["red" if data[m] < 0 else "blue"],
+                          edgecolor="#808080", zorder=2)
+            else:
+                cbar = plt.colorbar(sm, ax=plt.gca())
+                cbar.set_label('CU', rotation=0, labelpad=25)
 
-            for m in range(len(data)):
-                ax.barh(y_pos[m], data[m], color=cmap1(my_norm(cu[m])),
-                        edgecolor="#808080", zorder=2)
+                plt.xlabel("CI")
+
+                for m in range(len(data)):
+                  ax.barh(y_pos[m], data[m], color=cmap1(my_norm(cu[m])),
+                          edgecolor="#808080", zorder=2)
 
         if plot_mode == "overlap":
             plt.xlabel("CI and relative CU")
@@ -286,8 +302,9 @@ class CiuObject:
             for m in range(len(data)):
                 ax.barh(y_pos[m], data[m], color=color_fill_ci,
                         edgecolor=color_edge_ci, linewidth=1.5, zorder=2)
-                ax.barh(y_pos[m], cu[m] * data[m], color=color_fill_cu,
+                ax.barh(y_pos[m], cu[m]*data[m], color=color_fill_cu,
                         edgecolor=color_edge_cu, linewidth=1.5, zorder=2)
+
 
         if plot_mode == "combined":
             plt.xlabel("CI and relative CU")
@@ -297,20 +314,22 @@ class CiuObject:
 
             for m in range(len(data)):
                 ax.barh(y_pos[m], data[m], color="#ffffff66", edgecolor="#808080", zorder=2)
-                ax.barh(y_pos[m], cu[m] * data[m], color=cmap1(my_norm(cu[m])), zorder=2)
+                ax.barh(y_pos[m], cu[m]*data[m], color=cmap1(my_norm(cu[m])), zorder=2)
 
         ax.set_facecolor(color="#D9D9D9")
-        ax.set_xlim(0, 1)
+
+        if not use_influence:
+            ax.set_xlim(0, 1)
+            ax.set_xticks([0.00, 0.25, 0.50, 0.75, 1.00])
+            ax.xaxis.set_minor_locator(ticker.MultipleLocator(0.25/2))
+            ax.yaxis.set_minor_locator(ticker.MultipleLocator(1))
 
         ax.set_yticks(y_pos)
         ax.set_yticklabels(feature_names)
-        ax.set_xticks([0.00, 0.25, 0.50, 0.75, 1.00])
         ax.tick_params(axis='x', labelsize=12)
         ax.tick_params(axis='y', labelsize=12)
 
-        ax.xaxis.set_minor_locator(ticker.MultipleLocator(0.25 / 2))
-        ax.yaxis.set_minor_locator(ticker.MultipleLocator(1))
-        ax.grid(which='minor')
+        ax.grid(which = 'minor')
         ax.grid(which='minor', color='white')
         ax.grid(which='major', color='white')
 
