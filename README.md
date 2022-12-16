@@ -284,7 +284,7 @@ ciu_titanic.plot_3D(ind_inputs=[4,2])
 
 ![](https://raw.githubusercontent.com/KaryFramling/py-ciu/plot_3D/images/titanic_3d.png)<!-- -->
 
-###Titanic Example
+### Titanic Example
 
 We define a small vocabulary for Titanic as follows:
 
@@ -362,7 +362,7 @@ ciu_titanic.explain_text(target_concept="Wealth")
     ## 'The feature "Pclass", which is of very low importance (CI=4.76%), is not typical for its prediction (CU=0.1%).',
     ## 'The feature "Fare", which is of low importance (CI=36.51%), is typical for its prediction (CU=58.7%).'
 
-###Ames Housing Example
+### Ames Housing Example
 Ames housing is a data set about properties in the town Ames in the US. 
 It contains over 80 features that can be used for learning to estimate the sales price. 
 The following code imports the data set, does some pre-processing and trains a Gradient Boosting model:
