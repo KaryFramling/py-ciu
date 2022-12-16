@@ -5,7 +5,7 @@ import numpy as np
 
 
 class CiuObject:
-    def __init__(self, ci, cu, c_mins, c_maxs, outval, intermediate_concepts, concept_names):
+    def __init__(self, ci, cu, c_mins, c_maxs, outval, intermediate_concepts, concept_names, case, predictor, min_maxs):
         self.ci = ci
         self.cu = cu
         self.c_mins = c_mins
@@ -13,6 +13,9 @@ class CiuObject:
         self.outval = outval
         self.intermediate_concepts = intermediate_concepts
         self.concept_names = concept_names
+        self.case = case
+        self.predictor = predictor
+        self.min_maxs = min_maxs
 
     def _get_target_concept(self, target_concept, ind_inputs=None):
         # Initialising an ideal inputs copy including all the inputs of the concept
@@ -191,6 +194,73 @@ class CiuObject:
             explanation_texts.append(explanation_text)
 
         return explanation_texts
+
+    def plot_3D(self, ind_inputs=None):
+        """
+        :param list ind_inputs: indexes for two features to use for the 3D plot explanation.
+        :return: 3D plot object
+        """
+        fig, ax = plt.subplots(subplot_kw={"projection": "3d"}, figsize=(6, 6))
+
+        # Grabbing data
+        data = np.fromiter(self.ci.values(), dtype=float)
+        min_maxs = self.min_maxs
+
+        feature_names_prelim = self.ci.keys()
+        feature_names = self._filter_feature_names(
+            feature_names_prelim,
+            self.concept_names,
+            include_intermediate_concepts = None,
+            ind_inputs = ind_inputs
+        )
+
+        # Removing redundant ones
+        indices_deleted = 0
+        for index, feature_name in enumerate(feature_names_prelim):
+            if feature_name not in feature_names:
+                data = np.delete(data, index - indices_deleted)
+                indices_deleted += 1
+
+        # Making function to simulate R expand_grid iterative functionality
+        from itertools import product
+
+        def expand_grid(dictionary):
+            return pd.DataFrame(list(product(*dictionary.values())), columns=dictionary.keys())
+
+
+        xp = np.arange(min_maxs[feature_names[0]][0], min_maxs[feature_names[0]][1],
+                       (min_maxs[feature_names[0]][1] - min_maxs[feature_names[0]][0])/40)
+        yp = np.arange(min_maxs[feature_names[1]][0], min_maxs[feature_names[1]][1],
+                       (min_maxs[feature_names[1]][1] - min_maxs[feature_names[1]][0])/40)
+        pm = expand_grid({feature_names[0]: xp,
+                           feature_names[1]: yp})
+
+        # PD does not duplicate values on concat, rather sets them to NaN, so repeating manually
+        m = pd.DataFrame(np.repeat(self.case.values, len(pm.index), axis=0))
+        m.columns = self.case.columns
+
+        # Replacing default values
+        m.update(pm)
+
+        z = self.predictor(m)
+
+        # Extracting index we want and reshaping to square matrix
+        zm = np.reshape(z[:,1], (len(xp), len(xp)))
+
+        xi, yi = np.meshgrid(xp, yp)
+
+        ax.plot_surface(xi, yi, zm, color="lightblue", linewidth=1, antialiased=True, zorder=1, alpha=0.7)
+        ax.set_xlabel(feature_names[0])
+        ax.set_ylabel(feature_names[1])
+        ax.set_zlim(0, 1)
+
+        # Changing azimuth slightly, looks better
+        ax.azim += 10
+
+        # Adding instance point marker
+        ax.scatter(self.case[feature_names[0]], self.case[feature_names[1]], list(self.outval.values())[0], color="red", alpha=1, s=100, zorder=3)
+        fig.suptitle(f"Prediction Index {list(self.outval.keys())[0]} ({list(self.outval.values())[0]})")
+
 
     def plot_ciu(self, plot_mode='default', include_intermediate_concepts=None, use_influence=False,
                  ind_inputs=None, target_concept=None, sort='ci', color_blind=None,
