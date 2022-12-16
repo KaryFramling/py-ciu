@@ -282,7 +282,7 @@ single feature.
 ciu_titanic.plot_3D(ind_inputs=[4,2])
 ```
 
-![](https://raw.githubusercontent.com/KaryFramling/py-ciu/master/images/titanic_3d.png)<!-- -->
+![](https://raw.githubusercontent.com/KaryFramling/py-ciu/plot_3D/images/titanic_3d.png)<!-- -->
 
 ###Titanic Example
 
