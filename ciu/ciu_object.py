@@ -245,21 +245,27 @@ class CiuObject:
         z = self.predictor(m)
 
         # Extracting index we want and reshaping to square matrix
-        zm = np.reshape(z[:,1], (len(xp), len(xp)))
+        index = list(self.outval.keys())[0]
+        index_out = int(index) if index else 0
+
+        # Checking for single output scenarios
+        try:
+            zm = np.reshape(z[:,index_out], (len(xp), len(xp)))
+        except IndexError:
+            zm = np.reshape(z, (len(xp), len(xp)))
 
         xi, yi = np.meshgrid(xp, yp)
 
         ax.plot_surface(xi, yi, zm, color="lightblue", linewidth=1, antialiased=True, zorder=1, alpha=0.7)
         ax.set_xlabel(feature_names[0])
         ax.set_ylabel(feature_names[1])
-        ax.set_zlim(0, 1)
 
         # Changing azimuth slightly, looks better
         ax.azim += 10
 
         # Adding instance point marker
         ax.scatter(self.case[feature_names[0]], self.case[feature_names[1]], list(self.outval.values())[0], color="red", alpha=1, s=100, zorder=3)
-        fig.suptitle(f"Prediction Index {list(self.outval.keys())[0]} ({list(self.outval.values())[0]})")
+        fig.suptitle(f"Prediction Index {index_out} ({list(self.outval.values())[0]})")
 
 
     def plot_ciu(self, plot_mode='default', include_intermediate_concepts=None, use_influence=False,
