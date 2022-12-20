@@ -107,7 +107,7 @@ def determine_ciu(
     cus = {}
     c_mins = {}
     c_maxs = {}
-    outval = {'outval': predictor(case)[0][prediction_index] if prediction_index is not None else predictor(case)[0]}
+    outval = {prediction_index: predictor(case)[0][prediction_index] if prediction_index is not None else predictor(case)[0]}
 
     case_prediction = \
         predictor(case)[0] if prediction_index is None \
@@ -238,4 +238,4 @@ def determine_ciu(
         c_mins[intermediate_concept_name] = c_min
         c_maxs[intermediate_concept_name] = c_max
 
-    return CiuObject(cis, cus, c_mins, c_maxs, outval, intermediate_concepts, intermediate_concept_names)
+    return CiuObject(cis, cus, c_mins, c_maxs, outval, intermediate_concepts, intermediate_concept_names, case, predictor, min_maxs)

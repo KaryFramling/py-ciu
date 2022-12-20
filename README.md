@@ -164,7 +164,7 @@ Now we can also plot the CI/CU values using the CIU Object's ``plot_ciu`` functi
 ```python
 boston_ciu.plot_ciu()
 ```
-![](images/default_plot.png)
+![](https://raw.githubusercontent.com/KaryFramling/py-ciu/master/images/ames_basement_plot.png)
 Likewise there are also several options available using the following parameters:
 
 * ``plot_mode``: defines the type plot to use between 'default', 'overlap' and 'combined'.            
@@ -181,7 +181,7 @@ Here's quick example using some of these parameters to create a modified version
 ```python
 boston_ciu.plot_ciu(plot_mode="combined", color_blind='tritanopia', sort='cu')
 ```
-![](images/modified_plot.png)
+![](https://raw.githubusercontent.com/KaryFramling/py-ciu/master/images/modified_plot.png)
 
 ## Contextual influence
 
@@ -238,7 +238,7 @@ Output a barplot using Contextual Influence:
 ciu_titanic.plot_ciu(use_influence=True, include_intermediate_concepts='no')
 ```
 
-![](images/titanic_influence.png)<!-- -->
+![](https://raw.githubusercontent.com/KaryFramling/py-ciu/master/images/titanic_influence.png)<!-- -->
 
 **Remark:** The Equation for Contextual influence is similar to the
 definition of Shapley values for linear models, except that the input
@@ -260,7 +260,7 @@ shap_values = explainer(new_passenger)
 shap.plots.bar(shap_values[0,:,1], order=np.argsort(shap_values[0,:,1].values)[::-1])
 ```
 
-![](images/titanic_shap.png)
+![](https://raw.githubusercontent.com/KaryFramling/py-ciu/master/images/titanic_shap.png)
 
 It might be worth mentioning also that the Shapley value explanation has
 a much greater variance than the CIU (and Contextual influence)
@@ -272,7 +272,19 @@ compared to estimating a kind of gradient with AFA methods.
 CIU can use named feature coalitions and structured vocabularies. 
 Such vocabularies allow explanations at any abstraction level and can make explanations interactive.
 
-###Titanic Example
+The following code snippet plots the joint effect of features $age$ and
+$parch$ for the studied Titanic case (applicable for numeric features).
+It therefore shows how the coalition of those two features affects the
+output value and how CI and CU can be deduced in the same way as for a
+single feature.
+
+```python
+ciu_titanic.plot_3D(ind_inputs=[4,2])
+```
+
+![](https://raw.githubusercontent.com/KaryFramling/py-ciu/master/images/titanic_3d.png)<!-- -->
+
+### Titanic Example
 
 We define a small vocabulary for Titanic as follows:
 
@@ -306,7 +318,7 @@ First barplot explanation:
 ciu_titanic.plot_ciu(include_intermediate_concepts='only', plot_mode='overlap')
 ```
 
-![](images/titanic_intermediate.png)<!-- -->
+![](https://raw.githubusercontent.com/KaryFramling/py-ciu/master/images/titanic_intermediate.png)<!-- -->
 
 Then explain WEALTH and FAMILY
 
@@ -314,13 +326,13 @@ Then explain WEALTH and FAMILY
 ciu_titanic.plot_ciu(target_concept="Family", plot_mode="overlap")
 ```
 
-![](images/titanic_family.png)<!-- -->
+![](https://raw.githubusercontent.com/KaryFramling/py-ciu/master/images/titanic_family.png)<!-- -->
 
 ``` r
 ciu_titanic.plot_ciu(target_concept="Wealth", plot_mode="overlap")
 ```
 
-![](images/titanic_wealth.png)<!-- -->
+![](https://raw.githubusercontent.com/KaryFramling/py-ciu/master/images/titanic_wealth.png)<!-- -->
 
 Same thing using textual explanations:
 
@@ -350,7 +362,7 @@ ciu_titanic.explain_text(target_concept="Wealth")
     ## 'The feature "Pclass", which is of very low importance (CI=4.76%), is not typical for its prediction (CU=0.1%).',
     ## 'The feature "Fare", which is of low importance (CI=36.51%), is typical for its prediction (CU=58.7%).'
 
-###Ames Housing Example
+### Ames Housing Example
 Ames housing is a data set about properties in the town Ames in the US. 
 It contains over 80 features that can be used for learning to estimate the sales price. 
 The following code imports the data set, does some pre-processing and trains a Gradient Boosting model:
@@ -452,25 +464,25 @@ We start with an “explanation” using all 80 basic features, which is not ver
 ```python
 ciu_ames.plot_ciu(include_intermediate_concepts='no', plot_mode='overlap')
 ```
-![](images/ames_default_plot.png)
+![](https://raw.githubusercontent.com/KaryFramling/py-ciu/master/images/ames_default_plot.png)
 Then the same, using highest-level concepts:
 ```python
 ciu_ames.plot_ciu(include_intermediate_concepts='only', plot_mode='overlap')
 ```
-![](images/ames_high_plot.png)
+![](https://raw.githubusercontent.com/KaryFramling/py-ciu/master/images/ames_high_plot.png)
 Then explain further some intermediate concepts:
 ```python
 ciu_ames.plot_ciu(target_concept="House_condition", plot_mode="overlap")
 ```
-![](images/ames_house_cond_plot.png)
+![](https://raw.githubusercontent.com/KaryFramling/py-ciu/master/images/ames_house_cond_plot.png)
 ```python
 ciu_ames.plot_ciu(target_concept="Basement", plot_mode="overlap")
 ```
-![](images/ames_basement_plot.png)
+![](https://raw.githubusercontent.com/KaryFramling/py-ciu/master/images/ames_basement_plot.png)
 ```python
 ciu_ames.plot_ciu(target_concept="Garage", plot_mode="overlap")
 ```
-![](images/ames_garage_plot.png)
+![](https://raw.githubusercontent.com/KaryFramling/py-ciu/master/images/ames_garage_plot.png)
 
 This vocabulary is just an example of what kind of concepts a human typically deals with. 
 Vocabularies can be built freely (or learned, if possible) and used freely, even so that different vocabularies can be used with different users.
