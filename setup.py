@@ -10,13 +10,12 @@ URL = 'https://github.com/KaryFramling/py-ciu'  # Repository URL
 
 # Define your package's dependencies
 INSTALL_REQUIRES = [
-  # List your package dependencies here
-  matplotlib,
-  numpy,
-  pandas,
-  sklearn,
-  xgboost,
-  scikit_learn,
+  'matplotlib',
+  'numpy',
+  'pandas',
+  'scikit-learn',
+  'xgboost',
+  'scikit_learn',
 ]
 
 # Long description from README.md
@@ -35,7 +34,8 @@ setup(
     url=URL,
     packages=find_packages(),
     install_requires=INSTALL_REQUIRES,
-    #classifiers=[
+    license='MIT', 
+    classifiers=[
     #    'Development Status :: 3 - Alpha',
     #    'Intended Audience :: Developers',
         'License :: OSI Approved :: MIT License',
