@@ -2,7 +2,7 @@
 
 *Explainable Machine Learning through Contextual Importance and Utility*
 
-**NOTE: This python implementation is currently a work in progress. As such some of the functionality present in the original R version is not quite yet available.**
+**NOTE: This python implementation is partially work in progress. Notably, the core CIU development is still done in "R" and some of the functionality present in the R version may not be available in this python version.**
 
 The *py-ciu* library provides methods to generate post-hoc explanations for
 machine learning-based classifiers.
@@ -63,6 +63,8 @@ where $yumin=ymin$ if $A$ is positive and $yumin=ymax$ if $A$ is
 negative.
 
 ## Usage
+
+***Remark: the package "packaging" is being modified just now, so that all examples are generated directly from the Jupyter notebook [py-ciu_README_notebook.ipynb](py-ciu_README_notebook.ipynb). The contents of this "Usage" Chapter will be replaced by that in the near future!***
 
 First, install the required dependencies. NOTE: this is to be run in your environment's terminal; 
 some environments such as Google Colab might require an exclamation mark before the command, such as `!pip install`.
@@ -144,6 +146,7 @@ iris_ciu = determine_ciu(
     samples = 1000,
     prediction_index = 2
 )
+iris_ciu.explain_tabular()
 ```
 ## Example Output
 
@@ -164,7 +167,7 @@ Now we can also plot the CI/CU values using the CIU Object's ``plot_ciu`` functi
 ```python
 boston_ciu.plot_ciu()
 ```
-![](https://raw.githubusercontent.com/KaryFramling/py-ciu/master/images/ames_basement_plot.png)
+![](https://raw.githubusercontent.com/KaryFramling/py-ciu/master/images/default_plot.png)
 Likewise there are also several options available using the following parameters:
 
 * ``plot_mode``: defines the type plot to use between 'default', 'overlap' and 'combined'.            
@@ -451,7 +454,7 @@ Now we can initialise the CIU object with a relatively favourable test case and 
 ```python
 test_data_ames = X_test.iloc[[345]]
 
-ciu = determine_ciu(
+ciu_ames = determine_ciu(
     test_data_ames,
     xg_reg.predict,
     df.to_dict('list'),
@@ -465,11 +468,13 @@ We start with an “explanation” using all 80 basic features, which is not ver
 ciu_ames.plot_ciu(include_intermediate_concepts='no', plot_mode='overlap')
 ```
 ![](https://raw.githubusercontent.com/KaryFramling/py-ciu/master/images/ames_default_plot.png)
+
 Then the same, using highest-level concepts:
 ```python
 ciu_ames.plot_ciu(include_intermediate_concepts='only', plot_mode='overlap')
 ```
 ![](https://raw.githubusercontent.com/KaryFramling/py-ciu/master/images/ames_high_plot.png)
+
 Then explain further some intermediate concepts:
 ```python
 ciu_ames.plot_ciu(target_concept="House_condition", plot_mode="overlap")
