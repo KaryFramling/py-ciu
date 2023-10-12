@@ -71,7 +71,7 @@ some environments such as Google Colab might require an exclamation mark before 
 pip install py-ciu
 ```
 
-Usage examples, with code and notebook-generated output is accessed *[HERE](docs/py-ciu_README_notebook.md)*!
+Usage examples, with code and notebook-generated output is accessed *[HERE](docs/py-ciu_README_notebook.html)*!
 
 # Related resources
 
