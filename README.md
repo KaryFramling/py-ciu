@@ -64,8 +64,6 @@ negative.
 
 ## Usage
 
-***Remark: the package "packaging" is being modified just now, so that all examples are generated directly from the Jupyter notebook [py-ciu_README_notebook.ipynb](py-ciu_README_notebook.ipynb). The contents of this "Usage" Chapter will be replaced by that in the near future!***
-
 First, install the required dependencies. NOTE: this is to be run in your environment's terminal; 
 some environments such as Google Colab might require an exclamation mark before the command, such as `!pip install`.
 
@@ -73,7 +71,7 @@ some environments such as Google Colab might require an exclamation mark before 
 pip install py-ciu
 ```
 
-For usage examples, with code and notebook-generated output is accessed *[HERE]docs/py-ciu_README_notebook.html*!
+Usage examples, with code and notebook-generated output is accessed *[HERE](docs/py-ciu_README_notebook.md)*!
 
 # Related resources
 
