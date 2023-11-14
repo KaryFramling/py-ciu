@@ -46,8 +46,9 @@ def _generate_samples(case, feature_names, min_maxs, samples, indices,
 
 
 def determine_ciu(
-        case, predictor, dataset=None, min_maxs=None, samples=1000,
-        prediction_index=None, category_mapping=None, intermediate_concepts=None):
+        case, predictor, dataset=None, min_maxs=None, samples=100,
+        prediction_index=None, category_mapping=None, intermediate_concepts=None, 
+        neutralCU = 0.5):
     """
     Determines contextual importance and utility for a given case.
 
@@ -67,6 +68,8 @@ def determine_ciu(
     :param intermediate_concepts: List of {key: list} tuples of features whose
                                  interactions should be evaluated. Defaults to
                                  ``[]``.
+    :param neutralCU: "Neutral" value to use as reference/baseline value for Contextual influence.
+                      Default = 0.5. However, this is not implemented yet!
 
     :return: dictionary: for each feature: list with
              contextual importance value, contextual utility value

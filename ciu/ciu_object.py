@@ -269,6 +269,7 @@ class CiuObject:
 
 
     def plot_ciu(self, plot_mode='default', include_intermediate_concepts=None, use_influence=False,
+                 neutralCU=0.5,
                  ind_inputs=None, target_concept=None, sort='ci', color_blind=None,
                  color_fill_ci='#7fffd44d', color_edge_ci='#66CDAA',
                  color_fill_cu="#006400cc", color_edge_cu="#006400"):
@@ -303,7 +304,7 @@ class CiuObject:
         influence = {}
         if use_influence:
             for k, v in out_ci.items():
-                influence[k] = v*(self.cu[k]-0.5)
+                influence[k] = v*(self.cu[k]-neutralCU)
             out_ci = influence
 
         data = np.fromiter(out_ci.values(), dtype=float)
