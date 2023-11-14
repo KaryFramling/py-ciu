@@ -70,7 +70,7 @@ First install the `py-ciu` package. The recommended approach is to clone this re
 
 The other approach is to install it using `pip install py-ciu` but since the development of CIU is sometimes quite rapid, you should not except that all functionality is available in that version.
 
-Usage examples are available as a Jupyter notebook [py-ciu_README_notebook.ipynb](py-ciu_README_notebook.ipynb). 
+Usage examples are available as a Jupyter notebook [README_notebook.ipynb](README_notebook.ipynb). 
 
 # Related resources
 
