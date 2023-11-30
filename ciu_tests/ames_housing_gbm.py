@@ -2,10 +2,11 @@ def get_ames_gbm_test():
     """
     :return: A CIU object and the list of intermediate concepts used in the example.
     """
-    from ciu.ciu_core import determine_ciu
     import pandas as pd
     import xgboost as xgb
     from sklearn.model_selection import train_test_split
+    import ciu as ciu
+    from ciu.CIU import CIU
 
     df = pd.read_csv('https://raw.githubusercontent.com/KaryFramling/py-ciu/master/ciu_tests/data/AmesHousing.csv')
 
@@ -68,30 +69,23 @@ def get_ames_gbm_test():
 
     xg_reg.fit(X_train,y_train)
 
+    ames_voc = {
+        "Garage":[c for c in df.columns if 'Garage' in c],
+        "Basement":[c for c in df.columns if 'Bsmt' in c],
+        "Lot":list(df.columns[[3,4,7,8,9,10,11]]),
+        "Access":list(df.columns[[13,14]]),
+        "House_type":list(df.columns[[1,15,16,21]]),
+        "House_aesthetics":list(df.columns[[22,23,24,25,26]]),
+        "House_condition":list(df.columns[[20,18,21,28,19,29]]),
+        "First_floor_surface":list(df.columns[[43]]),
+        "Above_ground_living area":[c for c in df.columns if 'GrLivArea' in c]
+    }
 
-    intermediate = [
-        {"Garage":[c for c in df.columns if 'Garage' in c]},
-        {"Basement":[c for c in df.columns if 'Bsmt' in c]},
-        {"Lot":list(df.columns[[3,4,7,8,9,10,11]])},
-        {"Access":list(df.columns[[13,14]])},
-        {"House_type":list(df.columns[[1,15,16,21]])},
-        {"House_aesthetics":list(df.columns[[22,23,24,25,26]])},
-        {"House_condition":list(df.columns[[20,18,21,28,19,29]])},
-        {"First_floor_surface":list(df.columns[[43]])},
-        {"Above_ground_living area":[c for c in df.columns if 'GrLivArea' in c]}
-    ]
+    out_minmaxs = pd.DataFrame({'mins': [min(y_train)], 'maxs': max(y_train)})
+    out_minmaxs.index = ['Price']
+    ciu = CIU(xg_reg.predict, ['Price'], data=X_train, out_minmaxs=out_minmaxs, vocabulary=ames_voc)
 
+    instance = X_test.iloc[[345]]
 
-    test_data_ames = X_test.iloc[[345]]
-
-    ciu = determine_ciu(
-        test_data_ames,
-        xg_reg.predict,
-        df.to_dict('list'),
-        samples = 1000,
-        prediction_index = None,
-        intermediate_concepts = intermediate
-    )
-
-    return ciu, intermediate
+    return ciu, xg_reg, instance
 
