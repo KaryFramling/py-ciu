@@ -5,9 +5,9 @@
 The *py-ciu* library provides methods to generate post-hoc explanations for
 machine learning-based classifiers.
 
-**NOTE: This python implementation is partially work in progress. Notably, there's a re-structuring upcoming to make the use of this py-ciu package similar to the [R CIU](https://github.com/KaryFramling/ciu) and [py.ciu.image](https://github.com/KaryFramling/py.ciu.image) packages. Also, the core CIU development is still done in "R" and some of the functionality present in the R version may not be available in this python version.**
+**NOTE: This implementation is the result of a major rewrite made in November 2023. This was made in order to make the use of this py-ciu package similar to the [R CIU](https://github.com/KaryFramling/ciu) and re-written (Nov 2023) [py.ciu.image](https://github.com/KaryFramling/py.ciu.image) packages. Also, the core CIU development is still done in "R" and some of the functionality present in the R version may not be available in this python version.**
 
-
+The version of py-ciu that has been replaced on ?? December 2023 is available in the branch `VersionUntilNov2023`.
 
 # What is CIU?
 
@@ -70,7 +70,14 @@ First install the `py-ciu` package. The recommended approach is to clone this re
 
 The other approach is to install it using `pip install py-ciu` but since the development of CIU is sometimes quite rapid, you should not except that all functionality is available in that version.
 
-Usage examples are available as a Jupyter notebook [README_notebook.ipynb](README_notebook.ipynb). 
+A quick overview of the use of py-ciu with different datasets amd ML models is available as a Jupyter notebook [README_notebook.ipynb](README_notebook.ipynb). 
+
+Other notebooks available in the repository are:
+- [BostonTests.ipynb](BostonTests.ipynb): Examples of py-ciu use for Boston data set. This notebook provides a good overview of CIU capabilities for a regression task. 
+- [TitanicTests.ipynb](TitanicTests.ipynb): Examples of py-ciu use for Titanic data set. This notebook provides a good overview of CIU capabilities for a classification task. It also gives a small example of the use of CIU's "intermediate concepts". 
+- [AmesHousingTests.ipynb](AmesHousingTests.ipynb): Examples of py-ciu use for Ames housing data set. This data set has 80 input features and provides a good example of the use of CIU's "intermediate concepts", as well as why they are necessary in order to give "correct" explanations even in the presence of dependencies between features (which is also the case for Titanic). 
+- [IrisTests.ipynb](IrisTests.ipynb): Examples of py-ciu use for Iris data set. This notebook includes some "low-level" use of the package that may not be found in the other notebooks. 
+- [RunTests.ipynb](RunTests.ipynb): Notebook for running various tests that are found in the `ciu_tests` directory. 
 
 # Related resources
 
@@ -78,18 +85,18 @@ The original R implementation can be found at: <https://github.com/KaryFramling/
 
 There are also two implementations of CIU for explaining images:
 
+- Python: <https://github.com/KaryFramling/py.ciu.image>
 - R: <https://github.com/KaryFramling/ciu.image>
 
-- Python: <https://github.com/KaryFramling/py.ciu.image>
-
-Image explanation packages can be considered to be at proof-of-concept
-level (Nov. 2022). Future work on image explanation will presumably
-focus on the Python version, due to the extensive use of deep neural
-networks that tend to be implemented mainly for Python.
+Future work on image explanation will presumably focus on the Python version, due to the extensive use of deep neural networks that tend to be implemented mainly for Python.
 
 ## Authors
-* [Vlad Apopei](https://github.com/vladapopei/)
 * [Kary Främling](https://github.com/KaryFramling)
+* [Vlad Apopei](https://github.com/vladapopei/)
 * [Timotheus Kampik](https://github.com/TimKam/)
 
-The current version of py-ciu re-uses research code provided by [Timotheus Kampik](https://github.com/TimKam/) and replaces it. The old code is available in the branch "Historical".
+The first version of py-ciu was mainly implementd by [Timotheus Kampik](https://github.com/TimKam/) and replaces it. The old code is available in the branch "Historical".
+
+The re-write in 2022 was mainly made by [Vlad Apopei](https://github.com/vladapopei/) and is available in the branch "VersionUntilNov2023".
+
+
