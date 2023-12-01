@@ -101,6 +101,7 @@ class CIU:
         :return: A `list` of DataFrames with CIU results, one for each output of the model. **Remark:** `explain_core()` 
             indeed returns a `list`, which is a difference compared to the two other `explain_` methods! 
         """
+        # Deal with parameter values, especially None
         if instance is not None:
             self.instance = instance 
         if self.instance is None:
@@ -109,6 +110,10 @@ class CIU:
             nsamples = self.nsamples
         if neutralCU is None:
             neutralCU = self.neutralCU
+        if isinstance(output_inds, int):
+            output_inds = [output_inds]
+
+        # Preduct current instance.
         outvals = self.predictor(self.instance)
         # We want to make sure that we have a matrix, not an array. 
         if outvals.ndim == 1:
@@ -135,8 +140,8 @@ class CIU:
             outmins = self.out_minmaxs.iloc[:,0]
             outmaxs = self.out_minmaxs.iloc[:,1]
         cius = []
-        if output_inds:
-            out_range = [output_inds]
+        if output_inds is not None:
+            out_range = output_inds
         else:
             out_range = range(nouts)
         for i in out_range:
@@ -158,15 +163,15 @@ class CIU:
             cius.append(ciu)
         return cius
 
-    def explain(self, instance=None, output_ind=None, input_inds=None, nsamples=None, neutralCU=None, 
+    def explain(self, instance=None, output_inds=None, input_inds=None, nsamples=None, neutralCU=None, 
                 vocabulary=None, target_concept=None, target_ciu=None):
         """
         Determines contextual importance and utility for a given instance (set of input/feature values).
 
         :param instance: Instance to be explained. The default is None.
-        :param output_ind: Index of model output to explain. Default is None, in which case it is the value
-            of self.output_ind..
-        :type output_ind: int
+        :param output_inds: Index of model output to explain. Default is None, in which case it is the value
+            of self.output_ind.
+        :type output_inds: int
         :param input_inds: list of input indices to include in explanation. Default is None, which 
             signifies "all inputs". 
         :param nsamples: Number of samples to use. Default is ``None``, which means using the default 
@@ -178,8 +183,11 @@ class CIU:
         # Deal with None parameters.
         if vocabulary is None:
             vocabulary = self.vocabulary
-        if output_ind is None:
-            output_ind = self.output_ind
+        if output_inds is None:
+            output_inds = [self.output_ind]
+        else:
+            if isinstance(output_inds, int):
+                output_inds = [output_inds]
         out_minmaxs = None
         if target_concept is None:
             target_inds = None
@@ -194,8 +202,9 @@ class CIU:
         # Do the actual work: call explain_core for every input index.
         cius = []
         for i in input_inds:
-            ciu = self.explain_core([i], instance, output_inds=output_ind, nsamples=nsamples, neutralCU=neutralCU, 
-                                    target_concept=target_concept, target_inputs=target_inds, out_minmaxs=out_minmaxs)[0]
+            ciu = self.explain_core([i], instance, output_inds=output_inds, nsamples=nsamples, neutralCU=neutralCU, 
+                                    target_concept=target_concept, target_inputs=target_inds, out_minmaxs=out_minmaxs)
+            ciu = pd.concat(ciu)
             cius.append(ciu)
 
         # Memorize last result for direct plotting
@@ -203,7 +212,7 @@ class CIU:
         self.last_ciu_result = ciu
         return ciu
 
-    def explain_voc(self, instance=None, output_ind=None, input_concepts=None, nsamples=None, neutralCU=None, 
+    def explain_voc(self, instance=None, output_inds=None, input_concepts=None, nsamples=None, neutralCU=None, 
                     vocabulary=None, target_concept=None, target_ciu=None):
         """
         Determines contextual importance and utility for a given instance (set of input/feature values), 
@@ -224,8 +233,11 @@ class CIU:
         # Deal with None parameters.
         if vocabulary is None:
             vocabulary = self.vocabulary
-        if output_ind is None:
-            output_ind = self.output_ind
+        if output_inds is None:
+            output_inds = [self.output_ind]
+        else:
+            if isinstance(output_inds, int):
+                output_inds = [output_inds]
         out_minmaxs = None
         if target_concept is None:
             target_inds = None
@@ -240,8 +252,9 @@ class CIU:
         cius = []
         for ic in input_concepts:
             inds = [self.input_names.index(value) for value in vocabulary[ic]] 
-            ciu = self.explain_core(inds, instance, output_inds=output_ind, nsamples=nsamples, neutralCU=neutralCU, feature_name=ic, 
-                                    target_concept=target_concept, target_inputs=target_inds,  out_minmaxs=out_minmaxs)[0]
+            ciu = self.explain_core(inds, instance, output_inds=output_inds, nsamples=nsamples, neutralCU=neutralCU, feature_name=ic, 
+                                    target_concept=target_concept, target_inputs=target_inds,  out_minmaxs=out_minmaxs)
+            ciu = pd.concat(ciu)
             cius.append(ciu)
 
         # Memorize last result for direct plotting
@@ -249,7 +262,7 @@ class CIU:
         self.last_ciu_result = ciu
         return ciu
     
-    def explain_all(self, data=None, output_ind=None, input_inds=None, nsamples=None, neutralCU=None, 
+    def explain_all(self, data=None, output_inds=None, input_inds=None, nsamples=None, neutralCU=None, 
                 vocabulary=None, target_concept=None, target_ciu=None, do_norm_invals=False):
         """
         Do CIU for all instances in `data`. 
@@ -267,6 +280,11 @@ class CIU:
                 data = self.data
             else:
                 raise ValueError("No data provided.")
+        if output_inds is None:
+            output_inds = [self.output_ind]
+        else:
+            if isinstance(output_inds, int):
+                output_inds = [output_inds] 
         
         # Get values that are needed for normalizing input values.
         if do_norm_invals:
@@ -279,7 +297,7 @@ class CIU:
         ciu_res = []
         for i in range(len(data)):
             instance = data.iloc[[i]]
-            ciu = self.explain(instance, output_ind=output_ind, input_inds=input_inds, 
+            ciu = self.explain(instance, output_inds=output_inds, input_inds=input_inds, 
                                         nsamples=nsamples, neutralCU=neutralCU, vocabulary=vocabulary, 
                                         target_concept=target_concept, target_ciu=target_ciu)
             row_name = list(instance.index)[0]
@@ -297,7 +315,7 @@ class CIU:
 #============================================================================================
 
     # Input/output plot, with possibility to illustrate CIU.
-    def plot_input_output(self, instance=None, ind_input=0, ind_outputs=0, in_min_max_limits=None,
+    def plot_input_output(self, instance=None, ind_input=0, output_inds=0, in_min_max_limits=None,
                          n_points=40, main=None, xlab="x", ylab="y", ylim=0, figsize=(6, 4),
                          illustrate_CIU=False, legend_location=0, neutral_CU=0.5, 
                          CIU_illustration_colours=None):
@@ -305,7 +323,7 @@ class CIU:
         """
         Plot model output(s) value(s) as a function on one input. 
 
-        :param: ind_outputs: Integer value, list of integers or None. If None then all outputs are plotted. 
+        :param: output_inds: Integer value, list of integers or None. If None then all outputs are plotted. 
             Default: 0. 
         :param ylim: Value limits for y-axis. Can be zero, actual limits or None. Zero signifies that the known 
             min/max values for the output will be used. ``None`` signifies that no limits are defined and are 
@@ -316,10 +334,10 @@ class CIU:
         # Deal with None parameters and other parameter value arrangements.
         if instance is None:
             instance = self.instance
-        if ind_outputs is None:
-            ind_outputs = list(range(len(self.out_names)))
-        elif type(ind_outputs) is not list:
-            ind_outputs = [ind_outputs]
+        if output_inds is None:
+            output_inds = list(range(len(self.out_names)))
+        elif type(output_inds) is not list:
+            output_inds = [output_inds]
  
         # Check is it's a numeric or categorical input.
         fname = self.input_names[ind_input]
@@ -353,19 +371,19 @@ class CIU:
             outvals = outvals[:,np.newaxis]
  
         # Do actual plotting. If None is given, then we plot all outputs
-        plt_out_names = [self.out_names[i] for i in ind_outputs] if len(ind_outputs) > 1 else self.out_names[ind_outputs[0]]
+        plt_out_names = [self.out_names[i] for i in output_inds] if len(output_inds) > 1 else self.out_names[output_inds[0]]
         fig, ax = plt.subplots(figsize=figsize)
 
         if input_type == 'N':
-            plt.plot(x, y[:, ind_outputs], label=plt_out_names)
+            plt.plot(x, y[:, output_inds], label=plt_out_names)
             # circle_radius = 0.5
             # plt.scatter(instance.iloc[0,ind_input], cu_val, color='red', marker='o', s=circle_radius**2 * 100)
         else: 
-            plt.bar(xlabels, y[:, ind_outputs[0]], label=plt_out_names)
+            plt.bar(xlabels, y[:, output_inds[0]], label=plt_out_names)
         
         # Plot current value(s) as dot(s)
-        repx = np.repeat(instance.iloc[0,ind_input], len(ind_outputs))
-        plt.scatter(repx, outvals[0,ind_outputs], color='red', marker='o', label='out') # This radius seems OK
+        repx = np.repeat(instance.iloc[0,ind_input], len(output_inds))
+        plt.scatter(repx, outvals[0,output_inds], color='red', marker='o', label='out') # This radius seems OK
 
         # Decide on y-limits
         if ylim == 0:
@@ -375,10 +393,10 @@ class CIU:
             plt.ylim(ylim)
  
         if illustrate_CIU:
-            y_min = np.amin(y[:, ind_outputs])
+            y_min = np.amin(y[:, output_inds])
             plt.axhline(y=y_min, color='red', linestyle='--', label='ymin')
             #plt.text(max(x), y_min, 'ymin', verticalalignment='top', horizontalalignment='right', color='red')
-            y_max = np.amax(y[:, ind_outputs])
+            y_max = np.amax(y[:, output_inds])
             plt.axhline(y=y_max, color='green', linestyle='--', label='ymax')
             #plt.text(max(x), y_max, 'ymax', verticalalignment='bottom', horizontalalignment='right', color='green')
 
@@ -391,8 +409,8 @@ class CIU:
             main = 'Output value as a function of feature value'
         plt.title(main)
         plt.xlabel(self.input_names[ind_input])
-        if len(ind_outputs) == 1:
-            plt.ylabel(self.out_names[ind_outputs[0]])
+        if len(output_inds) == 1:
+            plt.ylabel(self.out_names[output_inds[0]])
         else:
             plt.ylabel('Output values')
 
