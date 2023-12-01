@@ -199,8 +199,9 @@ class CIU:
             cius.append(ciu)
 
         # Memorize last result for direct plotting
-        self.last_ciu_result = cius
-        return pd.concat(cius)
+        ciu = pd.concat(cius)
+        self.last_ciu_result = ciu
+        return ciu
 
     def explain_voc(self, instance=None, output_ind=None, input_concepts=None, nsamples=None, neutralCU=None, 
                     vocabulary=None, target_concept=None, target_ciu=None):
@@ -244,8 +245,9 @@ class CIU:
             cius.append(ciu)
 
         # Memorize last result for direct plotting
-        self.last_ciu_result = cius
-        return pd.concat(cius)
+        ciu = pd.concat(cius)
+        self.last_ciu_result = ciu
+        return ciu
     
     def explain_all(self, data=None, output_ind=None, input_inds=None, nsamples=None, neutralCU=None, 
                 vocabulary=None, target_concept=None, target_ciu=None, do_norm_invals=False):
@@ -394,7 +396,7 @@ class CIU:
         else:
             plt.ylabel('Output values')
 
-    def plot_ciu(self, ciu_result, plot_mode='default', CImax=1.0, 
+    def plot_ciu(self, ciu_result=None, plot_mode='default', CImax=1.0, 
                 sort='CI', main=None, color_blind=None, figsize=(6, 4),
                 color_fill_ci='#7fffd44d', color_edge_ci='#66CDAA',
                 color_fill_cu="#006400cc", color_edge_cu="#006400"):
@@ -411,6 +413,13 @@ class CIU:
         :param str color_edge_ci: defines the hex or named color for the CI edge in the overlap plot mode.
         :param str color_fill_ci: defines the hex or named color for the CI fill in the overlap plot mode.
         """
+
+        # Deal with None parameters etc
+        if ciu_result is None:
+            if self.last_ciu_result is None:
+                raise ValueError("No ciu_result given or stored from cal to explain method!")
+            else:
+                ciu_result = self.last_ciu_result
 
         feature_names = ciu_result.feature
         ci = ciu_result.CI
@@ -491,6 +500,13 @@ class CIU:
         :param edgecolors: Bar edge colors to use. Default: ("firebrick","steelblue").
         """
 
+        # Deal with None parameters etc
+        if ciu_result is None:
+            if self.last_ciu_result is None:
+                raise ValueError("No ciu_result given or stored from cal to explain method!")
+            else:
+                ciu_result = self.last_ciu_result
+
         feature_names = ciu_result.feature
         cinfl = ciu_result.Cinfl
         nfeatures = len(feature_names)
@@ -529,6 +545,13 @@ class CIU:
 
         :return: Explanation as `str`.
         """
+
+        # Deal with None parameters etc
+        if ciu_result is None:
+            if self.last_ciu_result is None:
+                raise ValueError("No ciu_result given or stored from cal to explain method!")
+            else:
+                ciu_result = self.last_ciu_result
 
         if thresholds_ci is None:
             thresholds_ci = {
