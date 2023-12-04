@@ -156,7 +156,7 @@ class CIU:
             invals = self.instance.iloc[0,coalition_inputs].values
             ciu = pd.DataFrame({'CI': [ci], 'CU': [cu], 'Cinfl': [cinfl], 'outname': [self.out_names[i]], 'outval': [outval],
                                 'feature': [fname], 'ymin': [mins[i]], 'ymax': [maxs[i]], 
-                                'inputs': [coalition_inputs], 'invals':[invals], 
+                                'inputs': [coalition_inputs], 'invals':[invals], 'neutralCU':[neutralCU], 
                                 'target_concept': [target_concept], 'target_inputs': [target_inputs]})
             ciu.index.name = 'Feature'
             ciu.index = [[fname]]
@@ -268,9 +268,9 @@ class CIU:
         Do CIU for all instances in `data`. 
 
         :param: do_norm_invals: Should a column with normalized input values be produced or not? This 
-        can only be done for "basic" features, not for coalitions of features (intermediate concepts) at 
-        least for the moment. It is useful to provide normalized input values for getting more 
-        meaningful beeswarm plots, for instance. Default: False.
+            can only be done for "basic" features, not for coalitions of features (intermediate concepts) at 
+            least for the moment. It is useful to provide normalized input values for getting more 
+            meaningful beeswarm plots, for instance. Default: False.
 
         :return: DataFrame with CIU results if all instances concatenated.
         """
@@ -710,4 +710,18 @@ class CIU:
         if azim is not None:
             ax.azim = azim
 
+def contrastive_ciu(ciures1, ciures2):
+    """
+    Calculate contrastive influence values for two CIU result DataFrames. 
 
+    The two DataFrames should have the same features, in same order. There is now also an assumption 
+    that both CIU results have been calculated using the same `neutralCU` value. 
+
+    In the future, there should be some testing of using feature-specific neutralCU values but it's 
+    not sure whether that affects this calculation in any way. 
+
+    :return: `list` with one influence value per feature/concept. 
+    """
+    contrastive = ciures1['CI']*(ciures1['CU'] - ciures2['CU'])
+    return contrastive
+    

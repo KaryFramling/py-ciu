@@ -30,7 +30,6 @@ def get_boston_gbm_test(inst_ind=1):
     out_minmaxs.index = ['Price']
     CIU = CIU(xg_reg.predict, ['Price'], data=X_train, out_minmaxs=out_minmaxs)
 
-    inst_ind = inst_ind
     instance = X_test.iloc[[inst_ind]]
 
     return CIU, xg_reg, instance

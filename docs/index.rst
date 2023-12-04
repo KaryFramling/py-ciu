@@ -13,10 +13,13 @@ Welcome to py-ciu's documentation!
 .. automodule:: ciu
    :members: 
 
-.. autoclass:: ciu.CIU.CIU
+.. automodule:: ciu.CIU
+   :members: 
+
+.. automodule:: ciu.PerturbationMinMaxEstimator
    :members:
 
-.. autoclass:: ciu.PerturbationMinMaxEstimator.PerturbationMinMaxEstimator
+.. automodule:: ciu.ciuplots
    :members:
 
 Indices and tables

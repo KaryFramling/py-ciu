@@ -1,5 +1,5 @@
 
-def get_heart_disease_rf():
+def get_heart_disease_rf(inst_ind=0):
     """
     :return: heart disease CIU Object with a Random Forest Classifier
     """
@@ -7,7 +7,8 @@ def get_heart_disease_rf():
     from sklearn.model_selection import train_test_split
     import pandas as pd
     import numpy as np
-    from ciu.ciu_core import determine_ciu
+    import ciu as ciu
+    from ciu.CIU import CIU
 
     model = RandomForestClassifier(n_estimators=100)
 
@@ -19,23 +20,20 @@ def get_heart_disease_rf():
 
     df.loc[df["num"] > 0, "num"] = 1
 
-    X = df.drop('num',axis=1)
-    y = df['num']
-
+    # Shortcut here: everything to float
     for i in df.columns:
         if 'object' in str(df[i].dtypes):
             df[i] = df[i].astype(float)
+
+    X = df.drop('num',axis=1)
+    y = df['num']
 
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=123)
 
     model.fit(X_train, y_train)
 
-    ciu = determine_ciu(
-        X_test.iloc[[23]],
-        model.predict_proba,
-        df.to_dict('list'),
-        samples = 1000,
-        prediction_index = 0
-    )
+    CIU = CIU(model.predict_proba, ['No', 'Yes'], data=X_train)
 
-    return ciu
+    instance = X_test.iloc[[inst_ind]]
+
+    return CIU, model, instance

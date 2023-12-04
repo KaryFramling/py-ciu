@@ -1,6 +1,8 @@
 import numpy as np
 import pandas as pd
+import matplotlib.pyplot as plt
 import plotly.graph_objects as go
+from ciu.CIU import contrastive_ciu
 
 def ciu_beeswarm(df, xcol='CI', ycol='feature', color_col='norm_invals', legend_title=None, jitter_level=0.5, 
                  palette = ["blue", "red"], opacity=0.8):
@@ -43,4 +45,39 @@ def ciu_beeswarm(df, xcol='CI', ycol='feature', color_col='norm_invals', legend_
     fig.update_layout(showlegend=False, coloraxis_showscale=True, legend_title_text='My Legend Title')
     fig.update_yaxes(tickvals=list(range(len(features))), ticktext=list(features))
     return fig
+
+def plot_contrastive(ciures1, ciures2, xminmax=None, main=None, figsize=(6, 4), 
+                     colors=("firebrick","steelblue"), edgecolors=("#808080","#808080")):
+    """
+    Create a contrastive plot for the two CIU results passed.
+    """
+    contrastive = contrastive_ciu(ciures1, ciures2)
+    feature_names = ciures1['feature']
+    nfeatures = len(feature_names)
+
+    fig, ax = plt.subplots(figsize=figsize)
+    y_pos = np.arange(nfeatures)
+
+    #    cinfl, feature_names = (list(t) for t in zip(*sorted(zip(cinfl, feature_names))))
+
+    plt.xlabel("ϕ")
+    for m in range(len(contrastive)):
+            ax.barh(y_pos[m], contrastive[m], color=[colors[0] if contrastive[m] < 0 else colors[1]],
+                    edgecolor=[edgecolors[0] if contrastive[m] < 0 else edgecolors[1]], zorder=2)
+
+    plt.ylabel("Features")
+    if xminmax is not None:
+        ax.set_xlim(xminmax)
+    if main is not None:
+        plt.title(main)
+
+    ax.set_facecolor(color="#D9D9D9")
+
+    # Y axis labels
+    ax.set_yticks(y_pos)
+    ax.set_yticklabels(feature_names)
+    ax.grid(which = 'minor')
+    ax.grid(which='minor', color='white')
+    ax.grid(which='major', color='white')
+
 
