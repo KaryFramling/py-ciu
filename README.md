@@ -73,10 +73,13 @@ The other approach is to install it using `pip install py-ciu` but since the dev
 A quick overview of the use of py-ciu with different datasets amd ML models is available as a Jupyter notebook [README_notebook.ipynb](README_notebook.ipynb). 
 
 Other notebooks available in the repository are:
+
 - [BostonTests.ipynb](BostonTests.ipynb): Examples of py-ciu use for Boston data set. This notebook provides a good overview of CIU capabilities for a regression task. 
 - [TitanicTests.ipynb](TitanicTests.ipynb): Examples of py-ciu use for Titanic data set. This notebook provides a good overview of CIU capabilities for a classification task. It also gives a small example of the use of CIU's "intermediate concepts". 
 - [AmesHousingTests.ipynb](AmesHousingTests.ipynb): Examples of py-ciu use for Ames housing data set. This data set has 80 input features and provides a good example of the use of CIU's "intermediate concepts", as well as why they are necessary in order to give "correct" explanations even in the presence of dependencies between features (which is also the case for Titanic). 
 - [IrisTests.ipynb](IrisTests.ipynb): Examples of py-ciu use for Iris data set. This notebook includes some "low-level" use of the package that may not be found in the other notebooks. 
+- [Beeswarms.ipynb](Beeswarms.ipynb): Examples of beeswarm plots as a means of "global explanation" by visualising importance/influence/utility/whatever for a set of instances.
+- [ContrastiveTests.ipynb](ContrastiveTests.ipynb): Examples of contrastive "Why A and not B?" and ""Why not B but rather A?" explanations. 
 - [RunTests.ipynb](RunTests.ipynb): Notebook for running various tests that are found in the `ciu_tests` directory. 
 
 # Related resources
