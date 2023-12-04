@@ -8,23 +8,54 @@ class CIU:
     """
     The CIU class implements the Contextual Importance and Utility method for Explainable AI. 
 
+    The method :func:`explain_core` contains all the CIU mathematics. However, it is probably not the method that 
+    would normally be called directly because it estimates CIU for a coalition of inputs (which works 
+    both for individual features and for CIU's *Intermediate Concepts*). It returns a list of DataFrames
+    with CIU results, where each DataFrame corresponds to the explanation of one output. 
+
+    The methods that would normally be called are :func:`explain` (for individual features), :func:`explain_voc` for 
+    Intermediate Concepts (/coalitions of features), and :func:`explain_all` for a set of instances. These all 
+    return a DataFrame with (presumably) all useful CIU result information (CI, CU, Contextual influence etc.).
+
+    Then there are also various methods for presenting CIU results graphically and textually. Some of these wouldn't 
+    necessarily have to be methods of the `CIU` class but they have been included here as a compromise. 
+
     :param predictor: Model prediction function to be used.
     :param out_names: List of names for the model outputs. This parameter is compulsory because
         it is used for determining how many outputs there are and initializing ``out_minmaxs`` to 0/1 if 
-        they are not provided as parameters.
-    :type out_names: list
-    :param data: DataFrame with the data set to use for inferring min and max input values. Only 
-        needed if in_minmaxs is not provided. Default: ``None``.
-    :param input_names: list of input column names in ``data``. Default: ``None``.
-    :param in_minmaxs: Pandas DataFrame with columns ``min`` and ``max`` and one row per input. Default: ``None``.
+        they are not provided as parameters. 
+    :type out_names:  [str]
+    :param data: Data set to use for inferring min and max input values. Only 
+        needed if ``in_minmaxs`` is not provided. 
+    :type data: DataFrame
+    :param input_names: list of input column names in ``data``. 
+    :type input_names: [str]
+    :param in_minmaxs: Pandas DataFrame with columns ``min`` and ``max`` and one row per input. If this parameter 
+        is provided, then ``data`` does not need to be passed. 
+    :type in_minmaxs: DataFrame
     :param out_minmaxs: Pandas DataFrame with columns ``min`` and ``max`` and one row per 
-        model output. Default: ``None``.
-    :param instance: Instance to be explained, which can be given directly here, which cause an 
-        explanation to be calculated straight away, without requiring a call to explain(). Default: ``None``.
-    :param output_ind: Default output index to explain. Default: 0. 
-    :param vocabulary: Vocabulary to use, defined as a DataFrame. Default: ``None``.
-    :param minmax_estimator: Not used yet! For potential abstraction of ymin/ymax estimation in the future, 
-        including model-specific methods.  
+        model output. If the value is ``None``, then ``out_minmaxs`` is initialized to ``[0,1]`` for 
+        all outputs. In practice this signifies that this parameter is typically not needed for classification 
+        tasks but is necessary to provide or regression tasks.
+    :type out_minmaxs: DataFrame
+    :param nsamples: Number of samples to use for estimating CIU of numerical inputs.
+    :type nsamples: int
+    :param category_mapping: Dictionary that contains names of features that should be dealt with as categories, i.e. 
+        having discrete int/str values. The use of this mapping is strongly recommended for efficiency and accuracy reasons! 
+        In the "R" implementation such a mapping is not needed because the `factor` column type indicates the columns and 
+        the possible values. The corresponding `Categorical` type doesn't seem to be used consistently in Python ML 
+        libraries so it didn't seem like a good choice to use that for the moment. 
+    :type category_mapping: dict
+    :param neutralCU: Reference/baseline value to use for Contextual influence. 
+    :type neutralCU: float
+    :param output_inds: Default output index/indices to explain. This value doesn't have to be given as a list, it can also 
+        be a single integer (that is automatically converted into a list). 
+    :type output_inds: [int]
+    :param vocabulary: Vocabulary to use, defined as a DataFrame. 
+    :type vocabulary: DataFrame
+    :param minmax_estimator: Class to be used for estimating ymin/ymax values, if something else is to be used than the 
+        default one.  
+    :type minmax_estimator: object
     """
     def __init__(
         self,
@@ -37,8 +68,7 @@ class CIU:
         nsamples=100,
         category_mapping=None, 
         neutralCU=0.5, 
-        instance=None, 
-        output_ind=0,
+        output_inds=[0],
         vocabulary=None, 
         minmax_estimator=None
     ):
@@ -66,12 +96,12 @@ class CIU:
         self.nsamples = nsamples
         self.category_mapping = category_mapping 
         self.neutralCU = neutralCU
-        self.instance = instance
-        self.output_ind = output_ind
+        self.output_inds = [output_inds] if isinstance(output_inds, int) else output_inds
         self.vocabulary = vocabulary
         self.minmax_estimator = minmax_estimator
 
         # Other instance variables
+        self.instance = None
         self.last_ciu_result = None
 
     def explain_core(self, coalition_inputs, instance=None, output_inds=None, feature_name=None, nsamples=None, neutralCU = None, 
@@ -84,21 +114,33 @@ class CIU:
         inputs in the coalition are perturbed at the same time. 
 
         :param coalition_inputs: list of input indices. 
-        :param instance: Instance to be explained. The default is None. If no instance is passed, then 
-            we use the last passed instance by default.
-        :param samples: Number of samples to use. Default is ``None``, which means using the default 
-            value of the constructor.
-        :param neutralCU: Value to use for "neutral CU" in Contextual influence calculation. 
-            Default is ``None`` because this parameter is only intended to temporarily override the value 
-            given to the constructor. 
+        :type coalition_inputs: [int]
+        :param instance: Instance to be explained. If ``instance=None`` then 
+            the last passed instance is used by default.
+        :type instance: DataFrame
+        :param output_inds: See corresponding parameter of constructor method. Default value ``None`` will use 
+            the value given to constructor method. 
+        :param feature_name: Feature name to use for coalition of inputs (i.e. if more than one input index is given), 
+            instead of the default "Coalition of..." feature name. 
+        :type feature_name: str
+        :param nsamples: See corresponding parameter of constructor method. Default value ``None`` will use 
+            the value given to constructor method. 
+        :param neutralCU: See corresponding parameter of constructor method. Default value ``None`` will use 
+            the value given to constructor method. 
         :param target_inputs: list of input indices for "target" concept, i.e. a CIU "intermediate concept". 
             Normally "coalition_inputs" should be a subset of "target_inputs" but that is not a requirement, 
             mathematically taken. Default is None, which signifies that the model outputs (i.e. "all inputs")
             are the targets and the "out_minmaxs" values are used for CI calculation. 
-        :param target_cius: DataFrame ... TAKE CARE THAT THIS HAS AS MANY ROWS AS THERE ARE OUTPUTS AND IN THE "RIGHT" 
-            ORDER, UNLESS OUTPUT_IND HAS BEEN PROVIDED
+        :type target_inputs: [int]
+        :param out_minmaxs: DataFrame with min/max output values to use instead of the "global" ones. This is used 
+            for implementing Intermediate Concept calculations. The DataFrame must have one row per output and two 
+            columns, preferably named `ymin` and `ymax`. 
+        :type out_minmaxs: DataFrame
+        :param target_concept: Name of the target concept. This is not used for calculations, it is only for filling up 
+            the ``target_concept`` coliumn of the CIU results. 
+        :type target_concept: str
 
-        :return: A `list` of DataFrames with CIU results, one for each output of the model. **Remark:** `explain_core()` 
+        :return: A ``list`` of DataFrames with CIU results, one for each output of the model. **Remark:** `explain_core()` 
             indeed returns a `list`, which is a difference compared to the two other `explain_` methods! 
         """
         # Deal with parameter values, especially None
@@ -110,6 +152,8 @@ class CIU:
             nsamples = self.nsamples
         if neutralCU is None:
             neutralCU = self.neutralCU
+        if output_inds is None:
+            output_inds = self.output_inds
         if isinstance(output_inds, int):
             output_inds = [output_inds]
 
@@ -118,7 +162,6 @@ class CIU:
         # We want to make sure that we have a matrix, not an array. 
         if outvals.ndim == 1:
             outvals = outvals[:, np.newaxis]
-        nouts = len(self.out_names)
 
         # Abstraction of MinMaxEstimator comes here, i.e. use default one if none defined. 
         if self.minmax_estimator is None:
@@ -143,7 +186,7 @@ class CIU:
         if output_inds is not None:
             out_range = output_inds
         else:
-            out_range = range(nouts)
+            out_range = range(len(output_inds))
         for i in out_range:
             outval = outvals[0,i]
             ci = (maxs[i] - mins[i])/(outmaxs[i] - outmins[i]) if (outmaxs[i] - outmins[i]) != 0 else 0
@@ -184,7 +227,7 @@ class CIU:
         if vocabulary is None:
             vocabulary = self.vocabulary
         if output_inds is None:
-            output_inds = [self.output_ind]
+            output_inds = self.output_inds
         else:
             if isinstance(output_inds, int):
                 output_inds = [output_inds]
@@ -219,7 +262,7 @@ class CIU:
         using the intermediate concept vocabulary.
 
         :param instance: Instance to be explained. The default is None.
-        :param output_ind: Index of model output to explain. Default is 0.
+        :param output_inds: Index of model output to explain. Default is 0.
         :param input_inds: list of input indices to include in explanation. Default is None, which 
             signifies "all inputs". 
         :param nsamples: Number of samples to use. Default is ``None``, which means using the default 
@@ -234,7 +277,7 @@ class CIU:
         if vocabulary is None:
             vocabulary = self.vocabulary
         if output_inds is None:
-            output_inds = [self.output_ind]
+            output_inds = self.output_inds
         else:
             if isinstance(output_inds, int):
                 output_inds = [output_inds]
@@ -281,7 +324,7 @@ class CIU:
             else:
                 raise ValueError("No data provided.")
         if output_inds is None:
-            output_inds = [self.output_ind]
+            output_inds = self.output_inds
         else:
             if isinstance(output_inds, int):
                 output_inds = [output_inds] 
