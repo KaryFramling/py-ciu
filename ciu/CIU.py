@@ -410,17 +410,39 @@ class CIU:
     def plot_input_output(self, instance=None, ind_input=0, output_inds=0, in_min_max_limits=None,
                          n_points=40, main=None, xlab="x", ylab="y", ylim=0, figsize=(6, 4),
                          illustrate_CIU=False, legend_location=0, neutral_CU=0.5, 
-                         CIU_illustration_colours=None):
-        #c("red", "orange", "green", "blue")
+                         CIU_illustration_colours=("red","green")):
         """
-        Plot model output(s) value(s) as a function on one input. 
+        Plot model output(s) value(s) as a function on one input. Works both for numerical and for 
+        categorical inputs. 
 
-        :param: output_inds: Integer value, list of integers or None. If None then all outputs are plotted. 
+        :param instance: See :func:`explain`. If `None`, then use last instance passed to an `explain_()` method.
+        :type instance: DataFrame
+        :param ind_input: Index of input to use.
+        :type ind_input: int
+        :param output_inds: Integer value, list of integers or None. If None then all outputs are plotted. 
             Default: 0. 
+        :type output_inds: int, [int], None
+        :param in_min_max_limits: Limits to use for input values. If None, the default ones are used.
+        :type in_min_max_limits: int array/list
+        :param n_points: Number of x-values to use for numerical inputs.
+        :type n_points: int
+        :param xlab: X-axis label.
+        :type xlab: str
+        :param ylab: Y-axis label.
+        :type ylab: str
         :param ylim: Value limits for y-axis. Can be zero, actual limits or None. Zero signifies that the known 
             min/max values for the output will be used. ``None`` signifies that no limits are defined and are 
             auto-determined by ``plt.plot``. If actual limits are given, they are passed to ``plt.ylim`` as such. 
             Default: zero. 
+        :type ylim: int, (min, max), None
+        :param figsize: Figure size to use.
+        :type figsize: (int,int)
+        :param illustrate_CIU: Plot CIU illustration or not?
+        :type illustrate_CIU: boolean
+        :param legend_location: See :func:`matplotlib.pyplot.legend`
+        :param neutral_CU: Neutral CU value to use for plotting Contextual influence reference value.
+        :type neutral_CU: float
+        :param CIU_illustration_colours: Colors to use for CIU illustration, in order: (`ymin`,`ymax`)
         """
 
         # Deal with None parameters and other parameter value arrangements.
@@ -486,10 +508,10 @@ class CIU:
  
         if illustrate_CIU:
             y_min = np.amin(y[:, output_inds])
-            plt.axhline(y=y_min, color='red', linestyle='--', label='ymin')
+            plt.axhline(y=y_min, color=CIU_illustration_colours[0], linestyle='--', label='ymin')
             #plt.text(max(x), y_min, 'ymin', verticalalignment='top', horizontalalignment='right', color='red')
             y_max = np.amax(y[:, output_inds])
-            plt.axhline(y=y_max, color='green', linestyle='--', label='ymax')
+            plt.axhline(y=y_max, color=CIU_illustration_colours[1], linestyle='--', label='ymax')
             #plt.text(max(x), y_max, 'ymax', verticalalignment='bottom', horizontalalignment='right', color='green')
 
         # Legend?
@@ -512,7 +534,10 @@ class CIU:
                 color_fill_cu="#006400cc", color_edge_cu="#006400"):
 
         """
+        The core plotting method for CIU results, which uses both CI and CU values in the explanation. 
+
         :param ciu_result: CIU result DataFrame as returned by one of the "explain..." methods. 
+        :type ciu_result: DataFrame
         :param str plot_mode: defines the type plot to use between 'default', 'overlap' and 'combined'.
         :param CImax: Limit CI axis to the given value. Default is 1
         :param str sort: defines the order of the plot bars by the 'CI' (default), 'CU' values or unsorted if None;
