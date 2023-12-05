@@ -7,9 +7,31 @@ from ciu.CIU import contrastive_ciu
 def ciu_beeswarm(df, xcol='CI', ycol='feature', color_col='norm_invals', legend_title=None, jitter_level=0.5, 
                  palette = ["blue", "red"], opacity=0.8):
     """
-    Create a beeswarm plot.
+    Create a beeswarm plot of values. This can be used for CI, Cinfl, CU or any values in principle 
+    (including Shapley value, LIME values, ...).
 
-    :param: df: A CIU result DataFrame, typically produced by a call to `explain_all()`. 
+    **Remark:** This has not been tested/implemented for non-numerical values, intermediate concepts etc.
+    (unlike the R version). 
+
+    :param: df: A "long" CIU result DataFrame, typically produced by a call to :func:`ciu.CIU.CIU.explain_all`. 
+    :type df: DataFrame
+    :param xcol: Name of column to use for X-axis (numerical).
+    :type xcol: str
+    :param ycol: Name of column to use for Y-axis, typically the one that contains feature names.
+    :type ycol: str
+    :param color_col: Name of column to use for dot color, typically the one that instance/feature values 
+        that are normalised into `[0,1]` interval.
+    :type color_col: str
+    :param legend_title: Text to use as legend title. If `None`, then used `color_col`.
+    :type legend_title: str
+    :param jitter_level: Level of jitter to use.
+    :type jitter_level: float
+    :param palette: Color palette to use. The default value is a list with two colors but can probably be 
+        any kind of palette that is accepted by plotly.graphobjects.
+    :type palette: list
+    :param opacity: Opacity value to use for dots.
+    :type opacity: float
+
 
     :return: A plotly.graphobjects Figure.
     """
@@ -49,7 +71,25 @@ def ciu_beeswarm(df, xcol='CI', ycol='feature', color_col='norm_invals', legend_
 def plot_contrastive(ciures1, ciures2, xminmax=None, main=None, figsize=(6, 4), 
                      colors=("firebrick","steelblue"), edgecolors=("#808080","#808080")):
     """
-    Create a contrastive plot for the two CIU results passed.
+    Create a contrastive plot for the two CIU results passed. This is essentially similar to 
+    an influence plot. 
+
+    :param ciures1: See :func:`ciu.CIU.contrastive_ciu`
+    :type ciures1: DataFrame
+    :param ciures2: See :func:`ciu.CIU.contrastive_ciu`
+    :type ciures2: DataFrame
+    :param xminmax: Min/max values to use for X axis.
+    :type xminmax: array/list
+    :param main: Main title to use.
+    :type main: str
+    :param figsize: Figure size.
+    :type figsize: array
+    :param colors: Bar colors to use.
+    :type colors: array
+    :param edgecolors: Bar edge colors to use.
+    :type edgecolors: array
+
+    :return A pyplot plot.
     """
     contrastive = contrastive_ciu(ciures1, ciures2)
     feature_names = ciures1['feature']

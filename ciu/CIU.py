@@ -806,11 +806,12 @@ def contrastive_ciu(ciures1, ciures2):
     """
     Calculate contrastive influence values for two CIU result DataFrames. 
 
-    The two DataFrames should have the same features, in same order. There is now also an assumption 
-    that both CIU results have been calculated using the same `neutralCU` value. 
+    The two DataFrames should have the same features, in the same order.  
 
-    In the future, there should be some testing of using feature-specific neutralCU values but it's 
-    not sure whether that affects this calculation in any way. 
+    :param ciures1: CIU result DataFrame of the "focus" instance.
+    :type ciures1: DataFrame
+    :param ciures2: CIU result DataFrame of the "challenger" instance.
+    :type ciures2: DataFrame
 
     :return: `list` with one influence value per feature/concept. 
     """
