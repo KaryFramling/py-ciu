@@ -27,7 +27,7 @@ Other notebooks available in the repository are:
 - [ContrastiveTests.ipynb](ContrastiveTests.ipynb): Examples of contrastive "Why A and not B?" and ""Why not B but rather A?" explanations. 
 - [RunTests.ipynb](RunTests.ipynb): Notebook for running various tests that are found in the `ciu_tests` directory. 
 
-A Sphinx-generated documentation (presumably up-to-date) is available at 
+A Sphinx-generated documentation (presumably up-to-date) in PDF is accessible at [docs/py-ciu.pdf](docs/py-ciu.pdf). Github doesn't want to show the HTML documentation as a web page, still need to find a good solution for that.  
 
 # What is CIU?
 
