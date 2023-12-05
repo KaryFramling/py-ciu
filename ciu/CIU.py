@@ -118,7 +118,7 @@ class CIU:
         :param instance: Instance to be explained. If ``instance=None`` then 
             the last passed instance is used by default.
         :type instance: DataFrame
-        :param output_inds: See corresponding parameter of constructor method. Default value ``None`` will use 
+        :param output_inds: See corresponding parameter of :class:`CIU` constructor method. Default value ``None`` will use 
             the value given to constructor method. 
         :param feature_name: Feature name to use for coalition of inputs (i.e. if more than one input index is given), 
             instead of the default "Coalition of..." feature name. 
@@ -209,19 +209,41 @@ class CIU:
     def explain(self, instance=None, output_inds=None, input_inds=None, nsamples=None, neutralCU=None, 
                 vocabulary=None, target_concept=None, target_ciu=None):
         """
-        Determines contextual importance and utility for a given instance (set of input/feature values).
+        Determines contextual importance and utility for a given instance (set of input/feature values). 
+        This method calculates CIU values only for individual features (not for Intermediate Concepts / 
+        coalitions of features), so if ``input_inds`` is given, then the returned CIU DataFrame will have 
+        the individual CI, CU etc values. If ``input_inds=None``, then CIU results are returned for all 
+        inputs/features.
 
-        :param instance: Instance to be explained. The default is None.
-        :param output_inds: Index of model output to explain. Default is None, in which case it is the value
-            of self.output_ind.
-        :type output_inds: int
-        :param input_inds: list of input indices to include in explanation. Default is None, which 
+        :param instance: Instance to be explained. If ``instance=None`` then 
+            the last passed instance is used by default.
+        :type instance: DataFrame
+        :param output_inds: Index of model output to explain. Default is None, in which case it is the 
+            ``output_inds`` value given to the :class:`CIU` constructor. This value doesn't have to be 
+            given as a list, it can also be a single integer (that is automatically converted into a list).
+        :type output_inds: [int]
+        :param input_inds: List of input indices to include in explanation. Default is None, which 
             signifies "all inputs". 
-        :param nsamples: Number of samples to use. Default is ``None``, which means using the default 
-            value of the constructor.
+        :type input_inds: [int]
+        :param nsamples: Number of samples to use. Default is ``None``, which means using the  
+            value of the :class:`CIU` constructor.
+        :type nsamples: int
         :param neutralCU: Value to use for "neutral CU" in Contextual influence calculation. 
             Default is ``None`` because this parameter is only intended to temporarily override the value 
-            given to the constructor.
+            given to the :class:`CIU` constructor.
+        :type neutralCU: int
+        :param vocabulary: Vocabulary to use, defined as a DataFrame. Only needed for overriding the default 
+            vocabulary given to :class:`CIU` constructor and if there's a ``target_concept``.
+        :type vocabulary: DataFrame
+        :param target_concept: Name of target concept, if the explanation is for an intermediate concept 
+            rather than for the output value. 
+        :type target_concept: str
+        :param target_ciu: If a CIU result already exists for the target_concept, then it can be passed with 
+            this parameter. Doing so avoids extra calculations and also avoids potential noise due to 
+            perturbation randomness in CIU calculations. 
+        :type target_ciu: DataFrame
+
+        :return: DataFrame with CIU results for the requested output(s).
         """
         # Deal with None parameters.
         if vocabulary is None:
@@ -261,16 +283,26 @@ class CIU:
         Determines contextual importance and utility for a given instance (set of input/feature values), 
         using the intermediate concept vocabulary.
 
-        :param instance: Instance to be explained. The default is None.
-        :param output_inds: Index of model output to explain. Default is 0.
-        :param input_inds: list of input indices to include in explanation. Default is None, which 
-            signifies "all inputs". 
-        :param nsamples: Number of samples to use. Default is ``None``, which means using the default 
-            value of the constructor.
-        :param neutralCU: Value to use for "neutral CU" in Contextual influence calculation. 
-            Default is ``None`` because this parameter is only intended to temporarily override the value 
-            given to the constructor. 
-        :param vocabulary: Vocabulary to use instead of the one (presumably) given to the constructor. Default: ``None``.
+        :param instance: See :func:`explain`.
+        :type instance: DataFrame
+        :param output_inds: See :func:`explain`.
+        :type output_inds: [int]
+        :param input_concepts: List of concepts to include in the explanation. Default is None, which 
+            signifies "all concepts in the vocabulary". 
+        :type input_concepts: [str]
+        :param nsamples: See :func:`explain`.
+        :type nsamples: int
+        :param neutralCU: See :func:`explain`.
+        :type neutralCU: int
+        :param vocabulary: Vocabulary to use, defined as a DataFrame. Only needed for overriding the default 
+            vocabulary given to :class:`CIU` constructor.
+        :type vocabulary: DataFrame
+        :param target_concept: See :func:`explain`. 
+        :type target_concept: str
+        :param target_ciu: See :func:`explain`. 
+        :type target_ciu: DataFrame
+
+        :return: DataFrame with CIU results for the requested output(s).
         """
 
         # Deal with None parameters.
@@ -310,12 +342,29 @@ class CIU:
         """
         Do CIU for all instances in `data`. 
 
+        :param data: DataFrame with all instances to evaluate.
+        :type data: DataFrame
+        :param output_inds: See :func:`explain`.
+        :type output_inds: [int]
+        :param input_inds: See :func:`explain`. 
+        :type input_inds: [int]
+        :param nsamples: See :func:`explain`.
+        :type nsamples: int
+        :param neutralCU: See :func:`explain`.
+        :type neutralCU: int
+        :param vocabulary: See :func:`explain`.
+        :type vocabulary: DataFrame
+        :param target_concept: See :func:`explain`. 
+        :type target_concept: str
+        :param target_ciu: See :func:`explain`. 
+        :type target_ciu: DataFrame
         :param: do_norm_invals: Should a column with normalized input values be produced or not? This 
             can only be done for "basic" features, not for coalitions of features (intermediate concepts) at 
             least for the moment. It is useful to provide normalized input values for getting more 
-            meaningful beeswarm plots, for instance. Default: False.
+            meaningful beeswarm plots, for instance. 
+        :type do_norm_invals: boolean
 
-        :return: DataFrame with CIU results if all instances concatenated.
+        :return: DataFrame with CIU results of all instances concatenated.
         """
         # Deal with None parameters.
         if data is None:
