@@ -21,41 +21,30 @@ class CIU:
     necessarily have to be methods of the `CIU` class but they have been included here as a compromise. 
 
     :param predictor: Model prediction function to be used.
-    :param out_names: List of names for the model outputs. This parameter is compulsory because
+    :param [str] out_names: List of names for the model outputs. This parameter is compulsory because
         it is used for determining how many outputs there are and initializing ``out_minmaxs`` to 0/1 if 
         they are not provided as parameters. 
-    :type out_names:  [str]
-    :param data: Data set to use for inferring min and max input values. Only 
+    :param DataFrame data: Data set to use for inferring min and max input values. Only 
         needed if ``in_minmaxs`` is not provided. 
-    :type data: DataFrame
-    :param input_names: list of input column names in ``data``. 
-    :type input_names: [str]
-    :param in_minmaxs: Pandas DataFrame with columns ``min`` and ``max`` and one row per input. If this parameter 
+    :param [str] input_names: list of input column names in ``data``. 
+    :param DataFrame in_minmaxs: Pandas DataFrame with columns ``min`` and ``max`` and one row per input. If this parameter 
         is provided, then ``data`` does not need to be passed. 
-    :type in_minmaxs: DataFrame
-    :param out_minmaxs: Pandas DataFrame with columns ``min`` and ``max`` and one row per 
+    :param DataFrame out_minmaxs: Pandas DataFrame with columns ``min`` and ``max`` and one row per 
         model output. If the value is ``None``, then ``out_minmaxs`` is initialized to ``[0,1]`` for 
         all outputs. In practice this signifies that this parameter is typically not needed for classification 
         tasks but is necessary to provide or regression tasks.
-    :type out_minmaxs: DataFrame
-    :param nsamples: Number of samples to use for estimating CIU of numerical inputs.
-    :type nsamples: int
-    :param category_mapping: Dictionary that contains names of features that should be dealt with as categories, i.e. 
+    :param int nsamples: Number of samples to use for estimating CIU of numerical inputs.
+    :param dict category_mapping: Dictionary that contains names of features that should be dealt with as categories, i.e. 
         having discrete int/str values. The use of this mapping is strongly recommended for efficiency and accuracy reasons! 
         In the "R" implementation such a mapping is not needed because the `factor` column type indicates the columns and 
         the possible values. The corresponding `Categorical` type doesn't seem to be used consistently in Python ML 
         libraries so it didn't seem like a good choice to use that for the moment. 
-    :type category_mapping: dict
-    :param neutralCU: Reference/baseline value to use for Contextual influence. 
-    :type neutralCU: float
-    :param output_inds: Default output index/indices to explain. This value doesn't have to be given as a list, it can also 
+    :param float neutralCU: Reference/baseline value to use for Contextual influence. 
+    :param [int] output_inds: Default output index/indices to explain. This value doesn't have to be given as a list, it can also 
         be a single integer (that is automatically converted into a list). 
-    :type output_inds: [int]
-    :param vocabulary: Vocabulary to use, defined as a DataFrame. 
-    :type vocabulary: DataFrame
-    :param minmax_estimator: Class to be used for estimating ymin/ymax values, if something else is to be used than the 
+    :param dict vocabulary: Vocabulary to use. 
+    :param object minmax_estimator: Object to be used for estimating ymin/ymax values, if something else is to be used than the 
         default one.  
-    :type minmax_estimator: object
     """
     def __init__(
         self,
@@ -113,32 +102,26 @@ class CIU:
         Coalitions of inputs are used for defining CIU's "intermediate concepts". It signifies that all the 
         inputs in the coalition are perturbed at the same time. 
 
-        :param coalition_inputs: list of input indices. 
-        :type coalition_inputs: [int]
-        :param instance: Instance to be explained. If ``instance=None`` then 
+        :param [int] coalition_inputs: list of input indices. 
+        :param DataFrame instance: Instance to be explained. If ``instance=None`` then 
             the last passed instance is used by default.
-        :type instance: DataFrame
         :param output_inds: See corresponding parameter of :class:`CIU` constructor method. Default value ``None`` will use 
             the value given to constructor method. 
-        :param feature_name: Feature name to use for coalition of inputs (i.e. if more than one input index is given), 
+        :param str feature_name: Feature name to use for coalition of inputs (i.e. if more than one input index is given), 
             instead of the default "Coalition of..." feature name. 
-        :type feature_name: str
-        :param nsamples: See corresponding parameter of constructor method. Default value ``None`` will use 
+        :param int nsamples: See corresponding parameter of constructor method. Default value ``None`` will use 
             the value given to constructor method. 
-        :param neutralCU: See corresponding parameter of constructor method. Default value ``None`` will use 
+        :param float neutralCU: See corresponding parameter of constructor method. Default value ``None`` will use 
             the value given to constructor method. 
-        :param target_inputs: list of input indices for "target" concept, i.e. a CIU "intermediate concept". 
+        :param [int] target_inputs: list of input indices for "target" concept, i.e. a CIU "intermediate concept". 
             Normally "coalition_inputs" should be a subset of "target_inputs" but that is not a requirement, 
             mathematically taken. Default is None, which signifies that the model outputs (i.e. "all inputs")
             are the targets and the "out_minmaxs" values are used for CI calculation. 
-        :type target_inputs: [int]
-        :param out_minmaxs: DataFrame with min/max output values to use instead of the "global" ones. This is used 
+        :param DataFrame out_minmaxs: DataFrame with min/max output values to use instead of the "global" ones. This is used 
             for implementing Intermediate Concept calculations. The DataFrame must have one row per output and two 
             columns, preferably named `ymin` and `ymax`. 
-        :type out_minmaxs: DataFrame
-        :param target_concept: Name of the target concept. This is not used for calculations, it is only for filling up 
+        :param str target_concept: Name of the target concept. This is not used for calculations, it is only for filling up 
             the ``target_concept`` coliumn of the CIU results. 
-        :type target_concept: str
 
         :return: A ``list`` of DataFrames with CIU results, one for each output of the model. **Remark:** `explain_core()` 
             indeed returns a `list`, which is a difference compared to the two other `explain_` methods! 
@@ -215,33 +198,25 @@ class CIU:
         the individual CI, CU etc values. If ``input_inds=None``, then CIU results are returned for all 
         inputs/features.
 
-        :param instance: Instance to be explained. If ``instance=None`` then 
+        :param DataFrame instance: Instance to be explained. If ``instance=None`` then 
             the last passed instance is used by default.
-        :type instance: DataFrame
-        :param output_inds: Index of model output to explain. Default is None, in which case it is the 
+        :param [int] output_inds: Index of model output to explain. Default is None, in which case it is the 
             ``output_inds`` value given to the :class:`CIU` constructor. This value doesn't have to be 
             given as a list, it can also be a single integer (that is automatically converted into a list).
-        :type output_inds: [int]
-        :param input_inds: List of input indices to include in explanation. Default is None, which 
+        :param [int] input_inds: List of input indices to include in explanation. Default is None, which 
             signifies "all inputs". 
-        :type input_inds: [int]
-        :param nsamples: Number of samples to use. Default is ``None``, which means using the  
+        :param int nsamples: Number of samples to use. Default is ``None``, which means using the  
             value of the :class:`CIU` constructor.
-        :type nsamples: int
-        :param neutralCU: Value to use for "neutral CU" in Contextual influence calculation. 
+        :param float neutralCU: Value to use for "neutral CU" in Contextual influence calculation. 
             Default is ``None`` because this parameter is only intended to temporarily override the value 
             given to the :class:`CIU` constructor.
-        :type neutralCU: int
-        :param vocabulary: Vocabulary to use, defined as a DataFrame. Only needed for overriding the default 
+        :param dict vocabulary: Vocabulary to use. Only needed for overriding the default 
             vocabulary given to :class:`CIU` constructor and if there's a ``target_concept``.
-        :type vocabulary: DataFrame
-        :param target_concept: Name of target concept, if the explanation is for an intermediate concept 
+        :param str target_concept: Name of target concept, if the explanation is for an intermediate concept 
             rather than for the output value. 
-        :type target_concept: str
-        :param target_ciu: If a CIU result already exists for the target_concept, then it can be passed with 
+        :param DataFrame target_ciu: If a CIU result already exists for the target_concept, then it can be passed with 
             this parameter. Doing so avoids extra calculations and also avoids potential noise due to 
             perturbation randomness in CIU calculations. 
-        :type target_ciu: DataFrame
 
         :return: DataFrame with CIU results for the requested output(s).
         """
@@ -283,24 +258,16 @@ class CIU:
         Determines contextual importance and utility for a given instance (set of input/feature values), 
         using the intermediate concept vocabulary.
 
-        :param instance: See :func:`explain`.
-        :type instance: DataFrame
-        :param output_inds: See :func:`explain`.
-        :type output_inds: [int]
-        :param input_concepts: List of concepts to include in the explanation. Default is None, which 
+        :param DataFrame instance: See :func:`explain`.
+        :param [int] output_inds: See :func:`explain`.
+        :param [str] input_concepts: List of concepts to include in the explanation. Default is None, which 
             signifies "all concepts in the vocabulary". 
-        :type input_concepts: [str]
-        :param nsamples: See :func:`explain`.
-        :type nsamples: int
-        :param neutralCU: See :func:`explain`.
-        :type neutralCU: int
-        :param vocabulary: Vocabulary to use, defined as a DataFrame. Only needed for overriding the default 
+        :param int nsamples: See :func:`explain`.
+        :param float neutralCU: See :func:`explain`.
+        :param dict vocabulary: Vocabulary to use. Only needed for overriding the default 
             vocabulary given to :class:`CIU` constructor.
-        :type vocabulary: DataFrame
-        :param target_concept: See :func:`explain`. 
-        :type target_concept: str
-        :param target_ciu: See :func:`explain`. 
-        :type target_ciu: DataFrame
+        :param str target_concept: See :func:`explain`. 
+        :param DataFrame target_ciu: See :func:`explain`. 
 
         :return: DataFrame with CIU results for the requested output(s).
         """
@@ -342,27 +309,18 @@ class CIU:
         """
         Do CIU for all instances in `data`. 
 
-        :param data: DataFrame with all instances to evaluate.
-        :type data: DataFrame
-        :param output_inds: See :func:`explain`.
-        :type output_inds: [int]
-        :param input_inds: See :func:`explain`. 
-        :type input_inds: [int]
-        :param nsamples: See :func:`explain`.
-        :type nsamples: int
-        :param neutralCU: See :func:`explain`.
-        :type neutralCU: int
-        :param vocabulary: See :func:`explain`.
-        :type vocabulary: DataFrame
-        :param target_concept: See :func:`explain`. 
-        :type target_concept: str
-        :param target_ciu: See :func:`explain`. 
-        :type target_ciu: DataFrame
-        :param: do_norm_invals: Should a column with normalized input values be produced or not? This 
+        :param DataFrame data: DataFrame with all instances to evaluate.
+        :param [int] output_inds: See :func:`explain`.
+        :param [int] input_inds: See :func:`explain`. 
+        :param int nsamples: See :func:`explain`.
+        :param float neutralCU: See :func:`explain`.
+        :param dict vocabulary: See :func:`explain`.
+        :param str target_concept: See :func:`explain`. 
+        :param DataFrame target_ciu: See :func:`explain`. 
+        :param boolean do_norm_invals: Should a column with normalized input values be produced or not? This 
             can only be done for "basic" features, not for coalitions of features (intermediate concepts) at 
             least for the moment. It is useful to provide normalized input values for getting more 
             meaningful beeswarm plots, for instance. 
-        :type do_norm_invals: boolean
 
         :return: DataFrame with CIU results of all instances concatenated.
         """
@@ -415,34 +373,25 @@ class CIU:
         Plot model output(s) value(s) as a function on one input. Works both for numerical and for 
         categorical inputs. 
 
-        :param instance: See :func:`explain`. If `None`, then use last instance passed to an `explain_()` method.
-        :type instance: DataFrame
-        :param ind_input: Index of input to use.
-        :type ind_input: int
+        :param DataFrame instance: See :func:`explain`. If `None`, then use last instance passed to an `explain_()` method.
+        :param int ind_input: Index of input to use.
         :param output_inds: Integer value, list of integers or None. If None then all outputs are plotted. 
             Default: 0. 
         :type output_inds: int, [int], None
-        :param in_min_max_limits: Limits to use for input values. If None, the default ones are used.
-        :type in_min_max_limits: int array/list
-        :param n_points: Number of x-values to use for numerical inputs.
-        :type n_points: int
-        :param xlab: X-axis label.
-        :type xlab: str
-        :param ylab: Y-axis label.
-        :type ylab: str
+        :param [int] in_min_max_limits: Limits to use for input values. If None, the default ones are used.
+        :param int n_points: Number of x-values to use for numerical inputs.
+        :param str xlab: X-axis label.
+        :param str ylab: Y-axis label.
         :param ylim: Value limits for y-axis. Can be zero, actual limits or None. Zero signifies that the known 
             min/max values for the output will be used. ``None`` signifies that no limits are defined and are 
             auto-determined by ``plt.plot``. If actual limits are given, they are passed to ``plt.ylim`` as such. 
             Default: zero. 
         :type ylim: int, (min, max), None
-        :param figsize: Figure size to use.
-        :type figsize: (int,int)
-        :param illustrate_CIU: Plot CIU illustration or not?
-        :type illustrate_CIU: boolean
+        :param (int,int) figsize: Figure size to use.
+        :param boolean illustrate_CIU: Plot CIU illustration or not?
         :param legend_location: See :func:`matplotlib.pyplot.legend`
-        :param neutral_CU: Neutral CU value to use for plotting Contextual influence reference value.
-        :type neutral_CU: float
-        :param CIU_illustration_colours: Colors to use for CIU illustration, in order: (`ymin`,`ymax`)
+        :param float neutral_CU: Neutral CU value to use for plotting Contextual influence reference value.
+        :param (str,str) CIU_illustration_colours: Colors to use for CIU illustration, in order: `(ymin,ymax)`.
         """
 
         # Deal with None parameters and other parameter value arrangements.
@@ -536,17 +485,17 @@ class CIU:
         """
         The core plotting method for CIU results, which uses both CI and CU values in the explanation. 
 
-        :param ciu_result: CIU result DataFrame as returned by one of the "explain..." methods. 
-        :type ciu_result: DataFrame
-        :param str plot_mode: defines the type plot to use between 'default', 'overlap' and 'combined'.
-        :param CImax: Limit CI axis to the given value. Default is 1
-        :param str sort: defines the order of the plot bars by the 'CI' (default), 'CU' values or unsorted if None;
+        :param DataFrame ciu_result: CIU result DataFrame as returned by one of the "explain..." methods. 
+        :param str plot_mode: defines the type plot to use between 'color_CU', 'overlap' and 'combined'.
+        :param float CImax: Limit CI axis to the given value. 
+        :param str sort: defines the order of the plot bars by the 'CI' (default), 'CU' values or unsorted if None.
+        :param str main: Plot title. 
         :param str color_blind: defines accessible color maps to use for the plots, such as 'protanopia',
             'deuteranopia' and 'tritanopia'.
-        :param str color_edge_cu: defines the hex or named color for the CU edge in the overlap plot mode.
-        :param str color_fill_cu: defines the hex or named color for the CU fill in the overlap plot mode.
         :param str color_edge_ci: defines the hex or named color for the CI edge in the overlap plot mode.
         :param str color_fill_ci: defines the hex or named color for the CI fill in the overlap plot mode.
+        :param str color_edge_cu: defines the hex or named color for the CU edge in the overlap plot mode.
+        :param str color_fill_cu: defines the hex or named color for the CU fill in the overlap plot mode.
         """
 
         # Deal with None parameters etc
@@ -586,7 +535,7 @@ class CIU:
         sm = cm.ScalarMappable(cmap=cmap1, norm=my_norm)
         sm.set_array([])
 
-        if plot_mode == "default":
+        if plot_mode == "color_CU":
             cbar = plt.colorbar(sm, ax=plt.gca())
             cbar.set_label('CU', rotation=0, labelpad=25)
             plt.xlabel("CI")
@@ -628,11 +577,12 @@ class CIU:
         """
         Plot CIU result as a bar plot using Contextual influence values. 
 
-        :param ciu_result: CIU result DataFrame as returned by one of the "explain..." methods. 
-        :param xminmax: Range to pass to ``xlim``. Default: None.
-        :param figsize: Value to pass as ``figsize`` parameter. Default: (6, 6).
-        :param colors: Bar colors to use. Default: ("firebrick","steelblue").
-        :param edgecolors: Bar edge colors to use. Default: ("firebrick","steelblue").
+        :param DataFrame ciu_result: CIU result DataFrame as returned by one of the "explain..." methods. 
+        :param (float,float) xminmax: Range to pass to ``xlim``. Default: None.
+        :param str main: Plot title. 
+        :param (int,int) figsize: Value to pass as ``figsize`` parameter. 
+        :param (str,str) colors: Bar colors to use. First value is for negative influence, second for positive influence.
+        :param (str,str) edgecolors: Bar edge colors to use. 
         """
 
         # Deal with None parameters etc
@@ -675,8 +625,14 @@ class CIU:
 
     def textual_explanation(self, ciu_result, target_ciu=None, thresholds_ci=None, thresholds_cu=None, use_markdown_effects=False):
         """
-        :param dict thresholds_ci: dictionary containing the label and ceiling value for the CI thresholds
-        :param dict thresholds_cu: dictionary containing the label and ceiling value for the CU thresholds
+        Translate a CIU result into some kind of "natural language" using threshold values for CI and CU. 
+
+        :param DataFrame ciu_result: CIU result as returned by one of the "explain..." methods. 
+        :param DataFrame target_ciu: CIU result for the target concept to explain, as returned by one of 
+            the "explain..." methods. 
+        :param dict thresholds_ci: Dictionary containing the labels and ceiling values for CI thresholds.
+        :param dict thresholds_cu: Dictionary containing the labels and ceiling values for CU thresholds. 
+        :param boolean use_markdown_effects: Produce Markdown codes in the text or not?
 
         :return: Explanation as `str`.
         """
@@ -768,17 +724,13 @@ class CIU:
         """
         Plot output value as a function of two inputs. 
 
-        :param ind_inputs: indexes for two features to use for the 3D plot.
-        :type ind_inputs: list
-        :param instance: instance to use if it is different from given to the constructor or 
-            as a parameter to ``explain()``or `èxplain_voc()``. Default: None.
-        :type instance: pd.DataFrame
-        :param ind_output: index of output to plot. Default: 0.
-        :type ind_output: int
-        :param nbr_pts: number of points to use (both axis). Default: (40,40).
-        :type nbr_pts: int
-        :param figsize: Values to pass to ``plt.figure()``. Default: (6,6).
-        :param azim: azimuth angle to use. Default: None.
+        :param [int,int] ind_inputs: indexes for two features to use for the 3D plot.
+        :param DataFrame instance: instance to use.
+        :param int ind_output: index of output to plot. Default: 0.
+        :param (int,int) nbr_pts: number of points to use (both axis). 
+        :param (int,int) figsize: Values to pass to ``plt.figure()``. 
+        :param float azim: azimuth angle to use. 
+
         :return: 3D plot object
         """
         # Deal with None parameters and other parameter value arrangements.
@@ -833,10 +785,8 @@ def contrastive_ciu(ciures1, ciures2):
 
     The two DataFrames should have the same features, in the same order.  
 
-    :param ciures1: CIU result DataFrame of the "focus" instance.
-    :type ciures1: DataFrame
-    :param ciures2: CIU result DataFrame of the "challenger" instance.
-    :type ciures2: DataFrame
+    :param DataFrame ciures1: CIU result DataFrame of the "focus" instance.
+    :param DataFrame ciures2: CIU result DataFrame of the "challenger" instance.
 
     :return: `list` with one influence value per feature/concept. 
     """
