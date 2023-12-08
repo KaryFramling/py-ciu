@@ -15,7 +15,7 @@ First install the `py-ciu` package. The recommended approach is to clone this re
 
 The other approach is to install it using `pip install py-ciu` but since the development of CIU is sometimes quite rapid, you should not except that all functionality is available in that version.
 
-A quick overview of the use of py-ciu with different datasets amd ML models is available as a Jupyter notebook [README_notebook.ipynb](README_notebook.ipynb). 
+A quick overview of the use of py-ciu with different datasets amd ML models is available as a Jupyter notebook [README_notebook.ipynb](README_notebook.ipynb). All the notebooks have been ran in Visual Studio Code, presumably with the latest versions of all packages. There will be errors or strange results in case of library version mismatches and that seems to happen quite frequently for Python libraries. So if your results are not identical to the ones that you see in these notebooks, then you probably have to update some/many libraries in your installation. 
 
 Other notebooks available in the repository are:
 

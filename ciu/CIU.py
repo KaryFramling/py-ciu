@@ -140,7 +140,7 @@ class CIU:
         if isinstance(output_inds, int):
             output_inds = [output_inds]
 
-        # Preduct current instance.
+        # Predict current instance.
         outvals = self.predictor(self.instance)
         # We want to make sure that we have a matrix, not an array. 
         if outvals.ndim == 1:
@@ -152,36 +152,35 @@ class CIU:
         else:
             estimator = self.minmax_estimator
         mins, maxs = estimator.get_minmax_outvals(instance, coalition_inputs, self.category_mapping)
+
         # If "target_inputs" is given, then we need to get "outmin" and "outmax" values for that 
         # coalition of inputs, rather than for the final outputs.
-        if target_inputs is not None:
-            target_cius = self.explain_core(target_inputs, instance, nsamples=nsamples, neutralCU=neutralCU)
+        if out_minmaxs is not None:
+            outmins = out_minmaxs.iloc[:,0]
+            outmaxs = out_minmaxs.iloc[:,1]
+        elif target_inputs is not None:
+            target_cius = self.explain_core(target_inputs, instance, output_inds=output_inds, nsamples=nsamples, neutralCU=neutralCU)
             all_cius = pd.concat(target_cius)
             outmins = all_cius.loc[:,'ymin']
             outmaxs = all_cius.loc[:,'ymax']
-        elif out_minmaxs is not None:
-            outmins = out_minmaxs.iloc[:,0]
-            outmaxs = out_minmaxs.iloc[:,1]
         else:
-            outmins = self.out_minmaxs.iloc[:,0]
-            outmaxs = self.out_minmaxs.iloc[:,1]
+            outmins = self.out_minmaxs.iloc[output_inds,0]
+            outmaxs = self.out_minmaxs.iloc[output_inds,1]
+
+        # Create CIU result for each requested output.
         cius = []
-        if output_inds is not None:
-            out_range = output_inds
-        else:
-            out_range = range(len(output_inds))
-        for i in out_range:
-            outval = outvals[0,i]
-            ci = (maxs[i] - mins[i])/(outmaxs[i] - outmins[i]) if (outmaxs[i] - outmins[i]) != 0 else 0
-            cu = (outval - mins[i])/(maxs[i] - mins[i]) if (maxs[i] - mins[i]) != 0 else 0
+        for i, outi in enumerate(output_inds):
+            outval = outvals[0,outi]
+            ci = (maxs[outi] - mins[outi])/(outmaxs[i] - outmins[i]) if (outmaxs[i] - outmins[i]) != 0 else 0
+            cu = (outval - mins[outi])/(maxs[outi] - mins[outi]) if (maxs[outi] - mins[outi]) != 0 else 0
             cinfl = ci*(cu - neutralCU)
             if len(coalition_inputs) == 1:
                 fname = self.input_names[coalition_inputs[0]]  
             else:
                 fname = "Coalition of %i inputs" % len(coalition_inputs) if feature_name is None else feature_name
             invals = self.instance.iloc[0,coalition_inputs].values
-            ciu = pd.DataFrame({'CI': [ci], 'CU': [cu], 'Cinfl': [cinfl], 'outname': [self.out_names[i]], 'outval': [outval],
-                                'feature': [fname], 'ymin': [mins[i]], 'ymax': [maxs[i]], 
+            ciu = pd.DataFrame({'CI': [ci], 'CU': [cu], 'Cinfl': [cinfl], 'outname': [self.out_names[outi]], 'outval': [outval],
+                                'feature': [fname], 'ymin': [mins[outi]], 'ymax': [maxs[outi]], 
                                 'inputs': [coalition_inputs], 'invals':[invals], 'neutralCU':[neutralCU], 
                                 'target_concept': [target_concept], 'target_inputs': [target_inputs]})
             ciu.index.name = 'Feature'
@@ -477,7 +476,7 @@ class CIU:
         else:
             plt.ylabel('Output values')
 
-    def plot_ciu(self, ciu_result=None, plot_mode='default', CImax=1.0, 
+    def plot_ciu(self, ciu_result=None, plot_mode='color_CU', CImax=1.0, 
                 sort='CI', main=None, color_blind=None, figsize=(6, 4),
                 color_fill_ci='#7fffd44d', color_edge_ci='#66CDAA',
                 color_fill_cu="#006400cc", color_edge_cu="#006400"):
@@ -571,7 +570,7 @@ class CIU:
         ax.grid(which='minor', color='white')
         ax.grid(which='major', color='white')
 
-    def plot_influence(self, ciu_result, xminmax=None, main=None, figsize=(6, 4), colors=("firebrick","steelblue"), 
+    def plot_influence(self, ciu_result=None, xminmax=None, main=None, figsize=(6, 4), colors=("firebrick","steelblue"), 
                        edgecolors=("#808080","#808080")):
 
         """
