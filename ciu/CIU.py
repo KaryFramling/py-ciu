@@ -171,7 +171,7 @@ class CIU:
         cius = []
         for i, outi in enumerate(output_inds):
             outval = outvals[0,outi]
-            ci = (maxs[outi] - mins[outi])/(outmaxs[i] - outmins[i]) if (outmaxs[i] - outmins[i]) != 0 else 0
+            ci = (maxs[outi] - mins[outi])/(outmaxs.iloc[i] - outmins.iloc[i]) if (outmaxs.iloc[i] - outmins.iloc[i]) != 0 else 0
             cu = (outval - mins[outi])/(maxs[outi] - mins[outi]) if (maxs[outi] - mins[outi]) != 0 else 0
             cinfl = ci*(cu - neutralCU)
             if len(coalition_inputs) == 1:
@@ -412,8 +412,8 @@ class CIU:
         if input_type == 'N':
             if in_min_max_limits is None:
                 in_min_max_limits = self.in_minmaxs.iloc[ind_input,:]
-            in_min = in_min_max_limits[0]
-            in_max = in_min_max_limits[1]
+            in_min = in_min_max_limits.iloc[0]
+            in_max = in_min_max_limits.iloc[1]
             interv = (in_max - in_min)/n_points
             x = np.arange(in_min, in_max, interv)
             m = np.tile(instance, (n_points, 1))
@@ -449,7 +449,7 @@ class CIU:
 
         # Decide on y-limits
         if ylim == 0:
-            ylim = (np.amin(self.out_minmaxs.iloc[[0],0][0]), np.amax(self.out_minmaxs.iloc[[0],1][0]))
+            ylim = (np.amin(self.out_minmaxs.iloc[[0],0].iloc[0]), np.amax(self.out_minmaxs.iloc[[0],1].iloc[0]))
             plt.ylim(ylim)
         elif ylim is not None:
             plt.ylim(ylim)
@@ -678,20 +678,20 @@ class CIU:
         explanation = []
 
 #            cu_concept = round(self.cu[target_concept] * 100, 2)
-        out_name = ciu_result.loc[:,'outname'][0]
-        if ciu_result.loc[:,'target_concept'][0] is None:
-            outval = ciu_result.loc[:,'outval'][0]
-            outmin = self.out_minmaxs.loc[out_name,:][0]
-            out_cu = (outval - outmin)/(self.out_minmaxs.loc[out_name,:][1] - outmin)
+        out_name = ciu_result.loc[:,'outname'].iloc[0]
+        if ciu_result.loc[:,'target_concept'].iloc[0] is None:
+            outval = ciu_result.loc[:,'outval'].iloc[0]
+            outmin = self.out_minmaxs.loc[out_name,:].iloc[0]
+            out_cu = (outval - outmin)/(self.out_minmaxs.loc[out_name,:].iloc[1] - outmin)
             out_cu_text = list(thresholds_cu.keys())[self._find_interval(out_cu, thresholds_cu.values())]
             explanation.append(f"The explained value is {BLD}{ITS}{out_name}{ITS}{BLD} with the value " \
                                      f"{outval:.2f} (CU={out_cu:.2f}), which is {BLD}{out_cu_text}{BLD}.{BR}")
         else:
-            target_concept = ciu_result.loc[:,'target_concept'][0]
+            target_concept = ciu_result.loc[:,'target_concept'].iloc[0]
             if target_ciu is not None:
-                ci = target_ciu.loc[target_concept,'CI'][0]
+                ci = target_ciu.loc[target_concept,'CI'].iloc[0]
                 ci_text = list(thresholds_ci.keys())[self._find_interval(ci, thresholds_ci.values())]
-                cu = target_ciu.loc[target_concept,'CU'][0]
+                cu = target_ciu.loc[target_concept,'CU'].iloc[0]
                 cu_text = list(thresholds_cu.keys())[self._find_interval(cu, thresholds_cu.values())]
                 explanation.append(f"The explained value is {BLD}{ITS}{target_concept}{ITS}{BLD} for output "\
                                    f"{BLD}{ITS}{out_name}{ITS}{BLD}, which has "\
@@ -700,11 +700,11 @@ class CIU:
                 explanation.append(f"The explained value is {BLD}{ITS}{target_concept}{ITS}{BLD} for output {BLD}{ITS}{out_name}{ITS}{BLD}.{BR}")
 
         for feature in list(feature_names):
-            ci = ciu_result.loc[feature,'CI'][0]
+            ci = ciu_result.loc[feature,'CI'].iloc[0]
             ci_text = list(thresholds_ci.keys())[self._find_interval(ci, thresholds_ci.values())]
-            cu = ciu_result.loc[feature,'CU'][0]
+            cu = ciu_result.loc[feature,'CU'].iloc[0]
             cu_text = list(thresholds_cu.keys())[self._find_interval(cu, thresholds_cu.values())]
-            fvalue = ciu_result.loc[feature,'invals'][0]
+            fvalue = ciu_result.loc[feature,'invals'].iloc[0]
             if len(fvalue) == 1: # Coalition or single feature?
                 fvalue = fvalue[0]
             explanation.append(f"Feature {ITS}{feature}{ITS} has {BLD}{ci_text} (CI={ci:.2f}){BLD} " \

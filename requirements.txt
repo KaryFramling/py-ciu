@@ -1,3 +1,5 @@
+# Requirements for running notebooks
+-e .
 matplotlib
 numpy
 pandas
