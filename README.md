@@ -100,7 +100,7 @@ Future work on image explanation will presumably focus on the Python version, du
 * [Vlad Apopei](https://github.com/vladapopei/)
 * [Timotheus Kampik](https://github.com/TimKam/)
 
-The first version of py-ciu was mainly implemented by [Timotheus Kampik](https://github.com/TimKam/) and replaces it. The old code is available in the branch "Historical".
+The first version of py-ciu was mainly implemented by [Timotheus Kampik](https://github.com/TimKam/). The old code is available in the branch "Historical".
 
 The re-write in 2022 was mainly made by [Vlad Apopei](https://github.com/vladapopei/) and is available in the branch "VersionUntilNov2023".
 
