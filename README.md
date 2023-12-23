@@ -5,13 +5,13 @@
 The *py-ciu* library provides methods to generate post-hoc explanations for
 machine learning-based classifiers.
 
-**NOTE: This implementation is the result of a major rewrite made in November 2023. This was made in order to make the use of this py-ciu package similar to the [R CIU](https://github.com/KaryFramling/ciu) and re-written (Nov 2023) [py.ciu.image](https://github.com/KaryFramling/py.ciu.image) packages. Also, the core CIU development is still done in "R" and some of the functionality present in the R version may not be available in this python version.**
+**NOTE: This implementation is the result of a major rewrite made in November/December 2023. This was made in order to make the use of this py-ciu package similar to the [R CIU](https://github.com/KaryFramling/ciu) and re-written (Nov 2023) [py.ciu.image](https://github.com/KaryFramling/py.ciu.image) packages. Also, the core CIU development is still done in "R" and some of the functionality present in the R version may not be available in this python version.**
 
 The version of py-ciu that has been replaced on ?? December 2023 is available in the branch `VersionUntilNov2023`.
 
 ## Usage
 
-First install the `py-ciu` package. The recommended approach is to clone this repository and use it from there. 
+First install the `py-ciu` package. The recommended approach is to clone this repository and use it from there. The current version has been tested with Python versions 3.11.5 and 3.12.1. More extensive testing against different versions will be performed in the future. 
 
 The other approach is to install it using `pip install py-ciu` but since the development of CIU is sometimes quite rapid, you should not except that all functionality is available in that version.
 
