@@ -102,8 +102,8 @@ def plot_contrastive(ciures1, ciures2, xminmax=None, main=None, figsize=(6, 4),
 
     plt.xlabel("ϕ")
     for m in range(len(contrastive)):
-            ax.barh(y_pos[m], contrastive[m], color=[colors[0] if contrastive[m] < 0 else colors[1]],
-                    edgecolor=[edgecolors[0] if contrastive[m] < 0 else edgecolors[1]], zorder=2)
+            ax.barh(y_pos[m], contrastive.iloc[m], color=[colors[0] if contrastive.iloc[m] < 0 else colors[1]],
+                    edgecolor=[edgecolors[0] if contrastive.iloc[m] < 0 else edgecolors[1]], zorder=2)
 
     plt.ylabel("Features")
     if xminmax is not None:

@@ -555,8 +555,8 @@ class CIU:
             cbar = plt.colorbar(sm, ax=plt.gca())
             cbar.set_label('CU', rotation=0, labelpad=25)
             for m in range(nfeatures):
-                ax.barh(y_pos[m], ci[m], color="#ffffff66", edgecolor="#808080", zorder=2)
-                ax.barh(y_pos[m], cu[m]*ci[m], color=cmap1(my_norm(cu[m])), zorder=2)
+                ax.barh(y_pos[m], ci.iloc[m], color="#ffffff66", edgecolor="#808080", zorder=2)
+                ax.barh(y_pos[m], cu.iloc[m]*ci.iloc[m], color=cmap1(my_norm(cu.iloc[m])), zorder=2)
 
         plt.ylabel("Features")
         ax.set_xlim(0, CImax)

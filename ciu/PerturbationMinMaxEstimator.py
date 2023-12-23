@@ -95,8 +95,8 @@ class PerturbationMinMaxEstimator:
             # First generate all min/max combinations
             mins = np.array(self.in_minmaxs.iloc[numeric_indices,0])
             maxs = np.array(self.in_minmaxs.iloc[numeric_indices,1])
-            minmaxgrid = pd.DataFrame(list(product(mins, maxs)))
-            nrsamples_to_do = samples_to_do - minmaxgrid.shape[0]
+            minmaxgrid = pd.DataFrame(list(product(*self.in_minmaxs.values[numeric_indices,:])))
+            nrsamples_to_do = max(0, samples_to_do - minmaxgrid.shape[0])
             # Then fill up the rest with random numbers
             if samples_to_do > 0:
                 numvals = np.random.rand(nrsamples_to_do, len(numeric_indices))
