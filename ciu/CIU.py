@@ -622,7 +622,7 @@ class CIU:
         ax.grid(which='minor', color='white')
         ax.grid(which='major', color='white')
 
-    def textual_explanation(self, ciu_result, target_ciu=None, thresholds_ci=None, thresholds_cu=None, use_markdown_effects=False):
+    def textual_explanation(self, ciu_result=None, target_ciu=None, thresholds_ci=None, thresholds_cu=None, use_markdown_effects=False):
         """
         Translate a CIU result into some kind of "natural language" using threshold values for CI and CU. 
 
@@ -639,7 +639,7 @@ class CIU:
         # Deal with None parameters etc
         if ciu_result is None:
             if self.last_ciu_result is None:
-                raise ValueError("No ciu_result given or stored from cal to explain method!")
+                raise ValueError("No ciu_result given or stored from call to explain method!")
             else:
                 ciu_result = self.last_ciu_result
 
