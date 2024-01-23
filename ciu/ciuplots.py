@@ -89,7 +89,7 @@ def plot_contrastive(ciures1, ciures2, xminmax=None, main=None, figsize=(6, 4),
     :param edgecolors: Bar edge colors to use.
     :type edgecolors: array
 
-    :return A pyplot plot.
+    :return: A pyplot plot.
     """
     contrastive = contrastive_ciu(ciures1, ciures2)
     feature_names = ciures1['feature']
