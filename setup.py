@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 
 # Package metadata
-NAME = 'py-ciu'  # Package name
+NAME = 'ciu'  # Package name
 DESCRIPTION = 'Python implementation of the Contextual Importance and Utility (CIU) explainable AI method'
 VERSION = '0.5.0'  # Use Semantic Versioning (https://semver.org/)
 AUTHOR = 'Kary Främling, Vlad Apopei, others'
