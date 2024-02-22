@@ -3,7 +3,7 @@ This package implements the Contextual Importance and Utility (CIU) method.
 
 Classes: 
     - :class:`ciu.CIU`: The CIU class implements the Contextual Importance and Utility method for Explainable AI. 
-    - :class:`ciu.PerturbationMinMaxEstimator.PerturbationMinMaxEstimator`: Class the finds minimal and maximal output values by perturbation of input value(s). This is the default class/method used by `CIU`.
+    - :class:`ciu.PerturbationMinMaxEstimator.PerturbationMinMaxEstimator`: Class that finds minimal and maximal output values by perturbation of input value(s). This is the default class/method used by `CIU`.
 
 Functions: 
     - `ciu.CIU.contrastive_ciu`: Function for calculating contrastive values from two CIU results. 
