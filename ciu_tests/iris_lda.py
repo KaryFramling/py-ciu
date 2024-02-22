@@ -31,7 +31,7 @@ def get_iris_test():
     #iris_df = df.apply(pd.to_numeric, errors='ignore')
 
     #Can also be written manually:
-    test_iris = pd.DataFrame.from_dict({'s_length' : [2], 's_width' : [3.2], 'p_length': [1.8], 'p_width' : [2.4]})
+    test_iris = pd.DataFrame.from_dict({'s_length' : [2.0], 's_width' : [3.2], 'p_length': [1.8], 'p_width' : [2.4]})
 
     ciu = CIU(model.predict_proba, iris_outnames, data=X_train)
 

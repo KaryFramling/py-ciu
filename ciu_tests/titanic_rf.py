@@ -21,7 +21,7 @@ def get_titanic_rf():
     train = data.drop('Survived', axis=1)
 
     # Create test instance (8-year old boy)
-    new_passenger = pd.DataFrame.from_dict({"Pclass" : [1], "Sex": [1], "Age": [8], "SibSp": [0], "Parch": [0], "Fare": [72], "Embarked": [1]})
+    new_passenger = pd.DataFrame.from_dict({"Pclass" : [1], "Sex": [1], "Age": [8.0], "SibSp": [0], "Parch": [0], "Fare": [72.0], "Embarked": [1]})
 
     model = RandomForestClassifier(n_estimators=100)
     model.fit(train, data.Survived)
