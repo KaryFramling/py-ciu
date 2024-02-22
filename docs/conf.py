@@ -51,12 +51,31 @@ exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 # Doing "pip install sphinx_rtd_theme" might be necessary here. 
 #
 #html_theme = 'alabaster'
+#html_theme_options = {
+#    'navigation_depth': 4,  # Set the depth of the navigation menu
+#    'collapse_navigation': False,  # Set to True to collapse the navigation menu by default
+#    'sticky_navigation': True,  # Set to True to make the navigation menu sticky
+#    'includehidden': False,  # Set to True to include hidden TOC entries in the navigation menu
+#}
+
 html_theme = 'sphinx_rtd_theme'
+# Theme options are theme-specific and customize the look and feel of a theme
+# further.  For a list of options available for each theme, see the
+# documentation.
+#
 html_theme_options = {
-    'navigation_depth': 4,  # Set the depth of the navigation menu
-    'collapse_navigation': False,  # Set to True to collapse the navigation menu by default
-    'sticky_navigation': True,  # Set to True to make the navigation menu sticky
-    'includehidden': False,  # Set to True to include hidden TOC entries in the navigation menu
+    #'canonical_url': '',
+    #"logo_only": True,
+    "display_version": True,
+    "prev_next_buttons_location": "bottom",
+    "style_external_links": False,
+    #"style_nav_header_background": "#343131",
+    # Toc options
+    "collapse_navigation": True,
+    "sticky_navigation": True,
+    "navigation_depth": 4,
+    "includehidden": True,
+    "titles_only": False,
 }
 
 # Add any paths that contain custom static files (such as style sheets) here,
