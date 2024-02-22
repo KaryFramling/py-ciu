@@ -98,12 +98,16 @@ class PerturbationMinMaxEstimator:
             minmaxgrid = pd.DataFrame(list(product(*self.in_minmaxs.values[numeric_indices,:])))
             nrsamples_to_do = max(0, samples_to_do - minmaxgrid.shape[0])
             # Then fill up the rest with random numbers
-            if samples_to_do > 0:
+            if nrsamples_to_do > 0:
                 numvals = np.random.rand(nrsamples_to_do, len(numeric_indices))
                 numvals =  mins + (maxs - mins)*numvals
                 numvals = pd.concat([minmaxgrid, pd.DataFrame(numvals)], ignore_index=True)
             else: 
                 numvals = minmaxgrid
+            # This is needed for the case if the number of numeric min/max value combinations 
+            # becomes greater than the equested number of samples. 
+            if numvals.shape[0] > samples_to_do:
+                samples_to_do = numvals.shape[0]
 
         # Merge numerical and categorical so that the total number of samples is 
         # max(self.nsamples, rows_in_categorical)

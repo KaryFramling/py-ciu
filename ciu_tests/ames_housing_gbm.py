@@ -61,6 +61,7 @@ def get_ames_gbm_test():
     df = df.apply(LabelEncoder().fit_transform)
 
     data = df.drop(columns=['SalePrice'])
+    data = data.astype(float) # This is a "quick fix" to make everything into float. Some of these would rather need a category mapping. 
     target = df.SalePrice
 
     #Splitting and training
