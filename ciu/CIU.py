@@ -718,8 +718,7 @@ class CIU:
                 return i
         return len(thresholds) - 1 # We can't allow indices to go beyond this. 
 
-    def plot_3D(self, ind_inputs, instance=None, ind_output=0, nbr_pts = (40,40), figsize=(6,6), 
-                azim=None):
+    def plot_3D(self, ind_inputs, instance=None, ind_output=0, nbr_pts=(40,40), zlim=(0,1), **kwargs):
         """
         Plot output value as a function of two inputs. 
 
@@ -727,10 +726,11 @@ class CIU:
         :param DataFrame instance: instance to use.
         :param int ind_output: index of output to plot. Default: 0.
         :param (int,int) nbr_pts: number of points to use (both axis). 
+        :param (float, float) zlim: Limits to use for Z axis. Can also be set to None.
         :param (int,int) figsize: Values to pass to ``plt.figure()``. 
         :param float azim: azimuth angle to use. 
 
-        :return: 3D plot object
+        :return: None
         """
         # Deal with None parameters and other parameter value arrangements.
         if instance is None:
@@ -742,7 +742,7 @@ class CIU:
         #fig, ax = plt.subplots(subplot_kw={"projection": "3d"}, figsize=(6, 6))
 
         # Create a figure and a 3D axis
-        fig = plt.figure()
+        fig = plt.figure(figsize=kwargs.get('figsize', None))
         ax = fig.add_subplot(111, projection='3d')
 
         # Generate data points
@@ -775,8 +775,10 @@ class CIU:
         ax.set_zlabel(self.out_names[ind_output])
 
         # Final adjustments
-        if azim is not None:
+        azim = kwargs.get('azim', None)
+        if azim is not None: 
             ax.azim = azim
+        ax.set_zlim(zlim)
 
 def contrastive_ciu(ciures1, ciures2):
     """
