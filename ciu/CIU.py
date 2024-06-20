@@ -366,8 +366,8 @@ class CIU:
     # Input/output plot, with possibility to illustrate CIU.
     def plot_input_output(self, instance=None, ind_input=0, output_inds=0, in_min_max_limits=None,
                          n_points=40, main=None, xlab="x", ylab="y", ylim=0, figsize=(6, 4),
-                         illustrate_CIU=False, legend_location=0, neutral_CU=0.5, 
-                         CIU_illustration_colours=("red","green")):
+                         illustrate_CIU=False, legend_location=0, neutralCU=None, 
+                         CIU_illustration_colours=("red","green","orange")):
         """
         Plot model output(s) value(s) as a function on one input. Works both for numerical and for 
         categorical inputs. 
@@ -390,7 +390,9 @@ class CIU:
         :param boolean illustrate_CIU: Plot CIU illustration or not?
         :param legend_location: See :func:`matplotlib.pyplot.legend`
         :param float neutral_CU: Neutral CU value to use for plotting Contextual influence reference value.
-        :param (str,str) CIU_illustration_colours: Colors to use for CIU illustration, in order: `(ymin,ymax)`.
+        :param (str,str) CIU_illustration_colours: Colors to use for CIU illustration, in order: `(ymin,ymax,neutral.CU)`.
+
+        :return: matplotlib.figure.Figure
         """
 
         # Deal with None parameters and other parameter value arrangements.
@@ -400,6 +402,8 @@ class CIU:
             output_inds = list(range(len(self.out_names)))
         elif type(output_inds) is not list:
             output_inds = [output_inds]
+        if neutralCU is None:
+            neutralCU = self.neutralCU
  
         # Check is it's a numeric or categorical input.
         fname = self.input_names[ind_input]
@@ -457,10 +461,11 @@ class CIU:
         if illustrate_CIU:
             y_min = np.amin(y[:, output_inds])
             plt.axhline(y=y_min, color=CIU_illustration_colours[0], linestyle='--', label='ymin')
-            #plt.text(max(x), y_min, 'ymin', verticalalignment='top', horizontalalignment='right', color='red')
             y_max = np.amax(y[:, output_inds])
             plt.axhline(y=y_max, color=CIU_illustration_colours[1], linestyle='--', label='ymax')
-            #plt.text(max(x), y_max, 'ymax', verticalalignment='bottom', horizontalalignment='right', color='green')
+            if neutralCU is not None:
+                y_neutral = y_min + neutralCU*(y_max - y_min)
+                plt.axhline(y=y_neutral, color=CIU_illustration_colours[2], linestyle='--', label='neutral')
 
         # Legend?
         if legend_location is not None:
@@ -475,6 +480,7 @@ class CIU:
             plt.ylabel(self.out_names[output_inds[0]])
         else:
             plt.ylabel('Output values')
+        return fig
 
     def plot_ciu(self, ciu_result=None, plot_mode='color_CU', CImax=1.0, 
                 sort='CI', main=None, color_blind=None, figsize=(6, 4),
@@ -495,6 +501,8 @@ class CIU:
         :param str color_fill_ci: defines the hex or named color for the CI fill in the overlap plot mode.
         :param str color_edge_cu: defines the hex or named color for the CU edge in the overlap plot mode.
         :param str color_fill_cu: defines the hex or named color for the CU fill in the overlap plot mode.
+
+        :return: matplotlib.figure.Figure
         """
 
         # Deal with None parameters etc
@@ -569,6 +577,7 @@ class CIU:
         ax.grid(which = 'minor')
         ax.grid(which='minor', color='white')
         ax.grid(which='major', color='white')
+        return fig
 
     def plot_influence(self, ciu_result=None, xminmax=None, main=None, figsize=(6, 4), colors=("firebrick","steelblue"), 
                        edgecolors=("#808080","#808080")):
@@ -582,6 +591,8 @@ class CIU:
         :param (int,int) figsize: Value to pass as ``figsize`` parameter. 
         :param (str,str) colors: Bar colors to use. First value is for negative influence, second for positive influence.
         :param (str,str) edgecolors: Bar edge colors to use. 
+
+        :return: matplotlib.figure.Figure
         """
 
         # Deal with None parameters etc
@@ -621,6 +632,7 @@ class CIU:
         ax.grid(which = 'minor')
         ax.grid(which='minor', color='white')
         ax.grid(which='major', color='white')
+        return fig
 
     def textual_explanation(self, ciu_result=None, target_ciu=None, thresholds_ci=None, thresholds_cu=None, use_markdown_effects=False):
         """
@@ -730,7 +742,7 @@ class CIU:
         :param (int,int) figsize: Values to pass to ``plt.figure()``. 
         :param float azim: azimuth angle to use. 
 
-        :return: None
+        :return: matplotlib.figure.Figure
         """
         # Deal with None parameters and other parameter value arrangements.
         if instance is None:
@@ -779,6 +791,7 @@ class CIU:
         if azim is not None: 
             ax.azim = azim
         ax.set_zlim(zlim)
+        return fig
 
 def contrastive_ciu(ciures1, ciures2):
     """
