@@ -730,7 +730,7 @@ class CIU:
                 return i
         return len(thresholds) - 1 # We can't allow indices to go beyond this. 
 
-    def plot_3D(self, ind_inputs, instance=None, ind_output=0, nbr_pts=(40,40), zlim=(0,1), **kwargs):
+    def plot_3D(self, ind_inputs, instance=None, ind_output=0, nbr_pts=(40,40), zlim=None, title="", **kwargs):
         """
         Plot output value as a function of two inputs. 
 
@@ -738,7 +738,8 @@ class CIU:
         :param DataFrame instance: instance to use.
         :param int ind_output: index of output to plot. Default: 0.
         :param (int,int) nbr_pts: number of points to use (both axis). 
-        :param (float, float) zlim: Limits to use for Z axis. Can also be set to None.
+        :param (float, float) zlim: Limits to use for Z axis.
+        :param str title: Title to use for plot. "" gives default title, None omits title.
         :param (int,int) figsize: Values to pass to ``plt.figure()``. 
         :param float azim: azimuth angle to use. 
 
@@ -767,7 +768,10 @@ class CIU:
         m[:,ind_inputs[0]] = x.reshape(total_npoints)
         m[:,ind_inputs[1]] = y.reshape(total_npoints)
         z = self.predictor(pd.DataFrame(m, columns=self.input_names))
-        zm = z[:,ind_output].reshape(x.shape[0], x.shape[1])
+        if z.ndim == 1:
+            zm = z.reshape(x.shape[0], x.shape[1])
+        else: 
+            zm = z[:,ind_output].reshape(x.shape[0], x.shape[1])
 
         # Create a 3D surface plot
         ax.plot_surface(x, y, zm, color="lightblue", linewidth=1, antialiased=True, zorder=1, alpha=0.8)
@@ -779,7 +783,6 @@ class CIU:
         xp = instance.iloc[0, ind_inputs[0]]
         yp = instance.iloc[0, ind_inputs[1]]
         ax.scatter(xp, yp, outvals[0,ind_output], color="red", alpha=1, s=100, zorder=3)
-        fig.suptitle(f"Prediction for {self.out_names[ind_output]} is {outvals[0,ind_output]}")
 
         # Add labels
         ax.set_xlabel(fnames[0])
@@ -787,6 +790,10 @@ class CIU:
         ax.set_zlabel(self.out_names[ind_output])
 
         # Final adjustments
+        if title is not None:
+            if title == "":
+                title = f"Prediction for {self.out_names[ind_output]} is {outvals[0,ind_output]:.3f}"
+            fig.suptitle(title)
         azim = kwargs.get('azim', None)
         if azim is not None: 
             ax.azim = azim
