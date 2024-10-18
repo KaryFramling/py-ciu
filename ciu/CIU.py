@@ -419,7 +419,7 @@ class CIU:
             in_min = in_min_max_limits.iloc[0]
             in_max = in_min_max_limits.iloc[1]
             interv = (in_max - in_min)/n_points
-            x = np.arange(in_min, in_max + interv, interv)  # Added +interv to ensure that in_max is included in x
+            x = np.arange(in_min, in_max + interv, interv)  # Added + interv to ensure that in_max is included in x
             m = np.tile(instance, (len(x), 1))  # Used len(x) to get the correct size for m
         else:
             x = self.category_mapping[fname]
